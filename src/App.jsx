@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types"; // Import prop-types
-import { QueryClient, QueryClientProvider } from "react-query";
-import { Amplify } from "aws-amplify";
-import awsconfig from "./aws-exports";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+//import { Amplify } from "aws-amplify";
+//import awsconfig from "./aws-exports";
 import { withAuthenticator } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import ExpenseForm from "./components/ExpenseForm.jsx";
 import ExpenseList from "./components/ExpenseList";
 import ExpenseChart from "./components/ExpenseChart";
 
-Amplify.configure(awsconfig);
+//Amplify.configure(awsconfig);
 const queryClient = new QueryClient();
 
 function App({ signOut, user }) {
