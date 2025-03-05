@@ -1,0 +1,32 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-personalexpensetrack-dev-c0049-authRole",
+      "UnauthRoleArn": "arn:aws:iam::717279732805:role/amplify-personalexpensetrack-dev-c0049-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::717279732805:role/amplify-personalexpensetrack-dev-c0049-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-personalexpensetrack-dev-c0049-deployment",
+      "UnauthRoleName": "amplify-personalexpensetrack-dev-c0049-unauthRole",
+      "StackName": "amplify-personalexpensetrack-dev-c0049",
+      "StackId": "arn:aws:cloudformation:us-east-2:717279732805:stack/amplify-personalexpensetrack-dev-c0049/e6b950f0-f94c-11ef-b7e8-0af9555acab7",
+      "AmplifyAppId": "d1epojjs7zsx6b"
+    },
+    "categories": {
+      "auth": {
+        "personalexpensetrack12d0101b": {}
+      },
+      "function": {
+        "S3Trigger10935188": {
+          "deploymentBucketName": "amplify-personalexpensetrack-dev-c0049-deployment",
+          "s3Key": "amplify-builds/S3Trigger10935188-4757486f6c71564d674f-build.zip"
+        }
+      },
+      "api": {
+        "personalexpensetrack": {}
+      },
+      "storage": {
+        "s3d024fd66": {}
+      }
+    }
+  }
+}
