@@ -1,36 +1,71 @@
-import React from "react";
+import React, { useState } from "react";
+import "./ExpenseList.css";
 
 const ExpenseList = ({ expenses, onDelete }) => {
-    // If no expenses are provided, display a message
-    if (!expenses || expenses.length === 0) {
-        return <p className="text-gray-600 text-center">No expenses added yet.</p>;
-    }
+    const [searchTerm, setSearchTerm] = useState("");
+    const [sortBy, setSortBy] = useState("date");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    const filteredExpenses = expenses.filter((expense) =>
+        expense.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    filteredExpenses.sort((a, b) => {
+        if (sortBy === "name") return a.name.localeCompare(b.name);
+        if (sortBy === "amount") return b.amount - a.amount;
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    const totalPages = Math.ceil(filteredExpenses.length / itemsPerPage);
+    const displayedExpenses = filteredExpenses.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
-        <div className="mt-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Expense List</h2>
-            <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-200">
+        <div className="expense-list-container">
+            <h2 className="expense-list-title">Expense List</h2>
+            <div className="controls">
+                <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search expenses..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select
+                    className="sort-select"
+                    onChange={(e) => setSortBy(e.target.value)}
+                    value={sortBy}
+                >
+                    <option value="date">Sort by Date</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="amount">Sort by Amount</option>
+                </select>
+            </div>
+            <div className="table-container">
+                <table className="expense-table">
                     <thead>
-                        <tr className="bg-gray-50">
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Name</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Amount</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Category</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Date</th>
-                            <th className="px-4 py-2 text-left text-sm font-medium text-gray-500">Actions</th>
+                        <tr>
+                            <th>Name</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {expenses.map((expense, index) => (
-                            <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                                <td className="px-4 py-2 text-sm text-gray-700">{expense.name}</td>
-                                <td className="px-4 py-2 text-sm text-gray-700">${expense.amount}</td>
-                                <td className="px-4 py-2 text-sm text-gray-700">{expense.category}</td>
-                                <td className="px-4 py-2 text-sm text-gray-700">{expense.date}</td>
-                                <td className="px-4 py-2 text-sm">
+                        {displayedExpenses.map((expense, index) => (
+                            <tr key={index} className="expense-row">
+                                <td>{expense.name}</td>
+                                <td>${expense.amount}</td>
+                                <td>{expense.category}</td>
+                                <td>{expense.date}</td>
+                                <td>
                                     <button
+                                        className="delete-button"
                                         onClick={() => onDelete(index)}
-                                        className="text-red-500 hover:text-red-700"
                                     >
                                         Delete
                                     </button>
@@ -39,6 +74,24 @@ const ExpenseList = ({ expenses, onDelete }) => {
                         ))}
                     </tbody>
                 </table>
+            </div>
+            <div className="pagination-buttons">
+                {currentPage > 1 && (
+                    <button
+                        className="pagination-button"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                        Previous
+                    </button>
+                )}
+                {currentPage < totalPages && (
+                    <button
+                        className="pagination-button"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                        Next
+                    </button>
+                )}
             </div>
         </div>
     );

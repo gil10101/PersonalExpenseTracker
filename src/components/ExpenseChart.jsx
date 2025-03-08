@@ -9,6 +9,7 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
+import "./ExpenseChart.css"; // Import the CSS file
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -67,9 +68,9 @@ const ExpenseChart = ({ expenses }) => {
     };
 
     return (
-        <div className="mt-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Expense Chart</h2>
-            <div className="bg-white p-4 rounded-lg shadow-md">
+        <div className="expense-chart-container">
+            <h2 className="chart-title">Expense Chart</h2>
+            <div className="chart-wrapper">
                 <Bar data={chartData} options={chartOptions} />
             </div>
         </div>
