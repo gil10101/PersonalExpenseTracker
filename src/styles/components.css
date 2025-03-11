@@ -1,0 +1,388 @@
+/* Card Component */
+.card {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-5);
+  height: 100%;
+}
+
+.card-header {
+  margin-bottom: var(--spacing-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  margin-bottom: 0;
+}
+
+/* Button Component */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  font-size: var(--font-size-base);
+}
+
+.btn-sm {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+  padding: var(--spacing-3) var(--spacing-5);
+  font-size: var(--font-size-lg);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #d00058;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #2a8c00;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b10022;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--gray-300);
+  color: var(--gray-700);
+}
+
+.btn-outline:hover {
+  background-color: var(--gray-100);
+}
+
+.btn-icon {
+  padding: var(--spacing-2);
+  border-radius: var(--radius-full);
+}
+
+/* Form Components */
+.form-group {
+  margin-bottom: var(--spacing-4);
+}
+
+label {
+  display: block;
+  margin-bottom: var(--spacing-2);
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  background-color: white;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-error {
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-1);
+}
+
+/* Expense Components */
+.expense-form {
+  background-color: white;
+  padding: var(--spacing-5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.expense-list {
+  background-color: white;
+  padding: var(--spacing-5);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.expense-month {
+  margin-bottom: var(--spacing-6);
+}
+
+.month-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.month-total {
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0;
+}
+
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3);
+  border-bottom: 1px solid var(--gray-200);
+  transition: background-color var(--transition-fast);
+}
+
+.expense-item:hover {
+  background-color: var(--gray-100);
+}
+
+.expense-item:last-child {
+  border-bottom: none;
+}
+
+.expense-name {
+  font-weight: 600;
+  margin-bottom: var(--spacing-1);
+}
+
+.expense-info {
+  flex: 1;
+}
+
+.expense-amount {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: var(--spacing-1);
+}
+
+.expense-details {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+.expense-category {
+  display: inline-block;
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.expense-date {
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+}
+
+.delete-btn {
+  background-color: var(--danger);
+  color: white;
+  border: none;
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.delete-btn:hover {
+  background-color: #b10022;
+}
+
+.no-expenses {
+  text-align: center;
+  color: var(--gray-600);
+  padding: var(--spacing-6) 0;
+}
+
+.grand-total {
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 2px solid var(--gray-300);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.grand-total h3 {
+  margin-bottom: 0;
+}
+
+.grand-total p {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0;
+}
+
+/* Dashboard Components */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.stat-card {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5);
+  box-shadow: var(--shadow-md);
+}
+
+.total-card {
+  background-color: var(--primary);
+  color: white;
+}
+
+.total-card h3 {
+  color: white;
+  opacity: 0.9;
+}
+
+.stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.category-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.category-bar-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.category-bar-wrapper {
+  height: 8px;
+  background-color: var(--gray-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.category-bar {
+  height: 100%;
+  background-color: var(--primary);
+  border-radius: var(--radius-md);
+}
+
+.monthly-trend {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 200px;
+}
+
+.month-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.month-name {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.month-bar-wrapper {
+  width: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 150px;
+}
+
+.month-bar {
+  width: 100%;
+  background-color: var(--primary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: height var(--transition-normal);
+}
+
+.month-amount {
+  margin-top: var(--spacing-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #ffebee;
+  color: var(--danger);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-4);
+  border-left: 4px solid var(--danger);
+  font-weight: 500;
+}
+
+.form-error-message {
+  background-color: #ffebee;
+  color: var(--danger);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-3);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+} 

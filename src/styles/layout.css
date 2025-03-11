@@ -1,0 +1,168 @@
+/* Layout Styles */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-4);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-4) 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-title {
+  margin-bottom: 0;
+  font-size: var(--font-size-2xl);
+  color: var(--primary);
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: var(--spacing-6);
+  margin: 0;
+  padding: 0;
+}
+
+.main-nav a {
+  color: var(--gray-700);
+  font-weight: 500;
+  padding: var(--spacing-2) 0;
+  position: relative;
+}
+
+.main-nav a:hover {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.main-nav a.active {
+  color: var(--primary);
+}
+
+.main-nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary);
+}
+
+.main-content {
+  flex: 1;
+  padding: var(--spacing-8) 0;
+  background-color: var(--gray-100);
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--spacing-6);
+}
+
+@media (max-width: 992px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-8);
+  }
+}
+
+.two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-5);
+}
+
+.three-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-5);
+}
+
+@media (max-width: 768px) {
+  .two-columns,
+  .three-columns {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+  }
+  
+  .main-nav ul {
+    gap: var(--spacing-4);
+  }
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: var(--spacing-2);
+}
+
+.gap-4 {
+  gap: var(--spacing-4);
+}
+
+.gap-6 {
+  gap: var(--spacing-6);
+}
+
+.mt-2 {
+  margin-top: var(--spacing-2);
+}
+
+.mt-4 {
+  margin-top: var(--spacing-4);
+}
+
+.mt-6 {
+  margin-top: var(--spacing-6);
+}
+
+.mb-2 {
+  margin-bottom: var(--spacing-2);
+}
+
+.mb-4 {
+  margin-bottom: var(--spacing-4);
+}
+
+.mb-6 {
+  margin-bottom: var(--spacing-6);
+} 

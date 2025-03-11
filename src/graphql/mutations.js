@@ -1,57 +1,51 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const createTodo = /* GraphQL */ `
-  mutation CreateTodo(
-    $input: CreateTodoInput!
-    $condition: ModelTodoConditionInput
+export const createExpense = /* GraphQL */ `
+  mutation CreateExpense(
+    $input: CreateExpenseInput!
+    $condition: ModelExpenseConditionInput
   ) {
-    createTodo(input: $input, condition: $condition) {
+    createExpense(input: $input, condition: $condition) {
       id
       name
-      description
+      amount
+      category
+      date
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
-      __typename
     }
   }
 `;
-export const updateTodo = /* GraphQL */ `
-  mutation UpdateTodo(
-    $input: UpdateTodoInput!
-    $condition: ModelTodoConditionInput
+export const updateExpense = /* GraphQL */ `
+  mutation UpdateExpense(
+    $input: UpdateExpenseInput!
+    $condition: ModelExpenseConditionInput
   ) {
-    updateTodo(input: $input, condition: $condition) {
+    updateExpense(input: $input, condition: $condition) {
       id
       name
-      description
+      amount
+      category
+      date
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
-      __typename
     }
   }
 `;
-export const deleteTodo = /* GraphQL */ `
-  mutation DeleteTodo(
-    $input: DeleteTodoInput!
-    $condition: ModelTodoConditionInput
+export const deleteExpense = /* GraphQL */ `
+  mutation DeleteExpense(
+    $input: DeleteExpenseInput!
+    $condition: ModelExpenseConditionInput
   ) {
-    deleteTodo(input: $input, condition: $condition) {
+    deleteExpense(input: $input, condition: $condition) {
       id
       name
-      description
+      amount
+      category
+      date
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
-      __typename
     }
   }
 `;

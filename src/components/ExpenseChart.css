@@ -1,49 +1,88 @@
 .expense-chart-container {
+    position: relative;
     background: #fff;
     padding: 1.5rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ddd;
-    overflow: hidden;
-}
-
-.expense-chart-container::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 99, 132, 0.1), transparent 70%);
-    z-index: -1;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    height: 100%;
+    width: 100%;
+    min-height: 400px;
 }
 
 .expense-chart-container h2 {
     margin-bottom: 1rem;
-    color: #333;
+    color: #111827;
     font-size: 1.25rem;
     font-weight: 600;
     text-align: center;
 }
 
-@keyframes slideIn {
+.chart-wrapper {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    position: relative;
+}
+
+.expense-chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain;
+    display: block;
+    position: relative;
+    z-index: 5;
+}
+
+.chart-title {
+    color: #111827;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Add a subtle background effect */
+.expense-chart-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.05), transparent 70%);
+    z-index: 1;
+    border-radius: 1rem;
+}
+
+@keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateX(-20px);
+        transform: translateY(10px);
     }
-
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0);
     }
 }
 
-@keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
+.expense-chart-container {
+    animation: fadeIn 0.6s ease-out;
+}
 
-    to {
-        transform: rotate(360deg);
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .expense-chart-container {
+        min-height: 350px;
+    }
+    
+    .chart-wrapper {
+        min-height: 250px;
     }
 }
+

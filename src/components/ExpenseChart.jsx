@@ -41,6 +41,10 @@ const ExpenseChart = ({ expenses }) => {
     // Chart options
     const chartOptions = {
         responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: 0, // Ensures no extra padding
+        },
         plugins: {
             legend: {
                 position: "top",
@@ -71,7 +75,7 @@ const ExpenseChart = ({ expenses }) => {
         <div className="expense-chart-container">
             <h2 className="chart-title">Expense Chart</h2>
             <div className="chart-wrapper">
-                <Bar data={chartData} options={chartOptions} />
+                <Bar data={chartData} options={chartOptions} style={{ height: "100%", width: "100%" }} />
             </div>
         </div>
     );

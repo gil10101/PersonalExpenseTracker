@@ -1,66 +1,193 @@
 // App.jsx
-import React, { useState } from "react";
-import PropTypes from "prop-types";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Amplify } from "aws-amplify";
-import awsconfig from "./aws-exports";
-import { withAuthenticator } from "@aws-amplify/ui-react";
-import "@aws-amplify/ui-react/styles.css";
-import ExpenseForm from "./components/ExpenseForm.jsx";
-import ExpenseCarousel from "./components/ExpenseCarousel";
-import "./App.css";
+import React, { useState, useEffect } from 'react';
+import { client } from './amplifyconfiguration.js';
+import * as queries from './graphql/queries';
+import * as mutations from './graphql/mutations';
+import { createExpense, listExpenses, deleteExpense, updateExpense } from './utils/expenseAPI';
 
-Amplify.configure(awsconfig);
-const queryClient = new QueryClient();
+// Import components
+import Header from './components/Header';
+import ExpenseForm from './components/ExpenseForm';
+import ExpenseList from './components/ExpenseList';
+import Dashboard from './components/Dashboard';
 
-function App({ signOut, user }) {
+function App() {
   const [expenses, setExpenses] = useState([]);
-  const [editingExpense, setEditingExpense] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    amount: '',
+    category: 'Food',
+    date: new Date().toISOString().split('T')[0]
+  });
+  const [error, setError] = useState(null);
+  const [alert, setAlert] = useState(null);
 
-  const handleExpenseSubmit = (expense) => {
-    if (expense.id) {
-      setExpenses((prevExpenses) =>
-        prevExpenses.map((e) => (e.id === expense.id ? expense : e))
-      );
-    } else {
-      setExpenses((prevExpenses) => [...prevExpenses, { ...expense, id: Date.now() }]);
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const expensesData = await listExpenses();
+      setExpenses(expensesData);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      setAlert({
+        type: 'danger',
+        message: `Error fetching expenses: ${error.message}`
+      });
     }
-    setEditingExpense(null);
   };
 
-  const handleDeleteExpense = (id) => {
-    setExpenses((prevExpenses) => prevExpenses.filter((expense) => expense.id !== id));
+  const addExpense = async (expense) => {
+    try {
+      // Format the expense data according to the schema
+      const expenseInput = {
+        name: expense.name,
+        amount: parseFloat(expense.amount),
+        category: expense.category,
+        date: new Date(expense.date).toISOString(),
+      };
+      
+      // Call the API to create the expense
+      const newExpense = await createExpense(expenseInput);
+      
+      // Update the local state with the new expense
+      setExpenses([...expenses, newExpense]);
+      
+      // Show success message
+      setAlert({
+        type: 'success',
+        message: 'Expense added successfully!'
+      });
+      
+      setTimeout(() => {
+        setAlert(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      setAlert({
+        type: 'danger',
+        message: `Error adding expense: ${error.message}`
+      });
+      
+      setTimeout(() => {
+        setAlert(null);
+      }, 5000);
+    }
   };
 
-  const handleEditExpense = (id) => {
-    const expenseToEdit = expenses.find((expense) => expense.id === id);
-    if (expenseToEdit) setEditingExpense(expenseToEdit);
+  const handleDeleteExpense = async (id) => {
+    try {
+      await deleteExpense(id);
+      setExpenses(expenses.filter(expense => expense.id !== id));
+      setAlert({
+        type: 'success',
+        message: 'Expense deleted successfully!'
+      });
+      
+      setTimeout(() => {
+        setAlert(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      setAlert({
+        type: 'danger',
+        message: `Error deleting expense: ${error.message}`
+      });
+    }
   };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    
+    try {
+      if (!formData.name || !formData.amount) {
+        setError('Name and amount are required');
+        return;
+      }
+      
+      // Create a properly formatted expense object
+      const expenseInput = {
+        name: formData.name,
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        date: formData.date
+      };
+      
+      console.log('Submitting expense:', expenseInput);
+      
+      const result = await client.graphql({
+        query: mutations.createExpense,
+        variables: { input: expenseInput }
+      });
+      
+      console.log('Create expense result:', result);
+      
+      if (result.data && result.data.createExpense) {
+        // Reset form on success
+        setFormData({
+          name: '',
+          amount: '',
+          category: 'Food',
+          date: new Date().toISOString().split('T')[0]
+        });
+        
+        // Refresh expense list
+        fetchExpenses();
+      } else {
+        setError('Failed to create expense. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      
+      // More detailed error logging
+      if (error.errors) {
+        error.errors.forEach((err, index) => {
+          console.error(`Error ${index + 1}:`, err);
+        });
+      }
+      
+      setError('Failed to create expense. Please check your input and try again.');
+    }
+  }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="app-container">
-        <h1 className="app-title">Personal Expense Tracker</h1>
-        <div className="app-layout">
-          <div className="form-section">
-            <ExpenseForm onSubmit={handleExpenseSubmit} editingExpense={editingExpense} />
-          </div>
-          <div className="divider"></div>
-          <div className="charts-section">
-            <ExpenseCarousel expenses={expenses} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+    <div className="app-container">
+      <Header />
+      
+      <div className="container">
+        <div className="main-content">
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
+          <div className="page-grid">
+            <div>
+              <ExpenseForm 
+                formData={formData} 
+                setFormData={setFormData} 
+                handleSubmit={handleSubmit} 
+                error={error}
+              />
+              
+              <div className="mt-6">
+                <Dashboard expenses={expenses} />
+              </div>
+            </div>
+            
+            <ExpenseList 
+              expenses={expenses} 
+              handleDelete={handleDeleteExpense} 
+            />
           </div>
         </div>
-        <button onClick={signOut} className="sign-out-button">
-          Sign Out
-        </button>
       </div>
-    </QueryClientProvider>
+    </div>
   );
 }
 
-App.propTypes = {
-  signOut: PropTypes.func.isRequired,
-  user: PropTypes.object,
-};
-
-export default withAuthenticator(App);
+export default App;

@@ -1,6 +1,6 @@
 projects:
   personalexpensetrack:
-    schemaPath: src/graphql/schema.json
+    schemaPath: amplify/data/resource.ts
     includes:
       - src/graphql/**/*.js
     excludes:

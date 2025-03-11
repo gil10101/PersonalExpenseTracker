@@ -1,18 +1,20 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 /*== STEP 1 ===============================================================
-The section below creates a Todo database table with a "content" field. Try
-adding a new "isDone" field as a boolean. The authorization rule below
-specifies that any unauthenticated user can "create", "read", "update", 
-and "delete" any "Todo" records.
+The section below creates an Expense database table with name, amount, 
+category, and date fields. The authorization rule specifies that only the 
+owner of the record can "create", "read", "update", and "delete" their 
+own Expense records.
 =========================================================================*/
 const schema = a.schema({
   Expense: a
     .model({
-      name: a.string(),
-      amount: a.float(),
+      name: a.string().required(),
+      amount: a.float().required(),
+      category: a.string().required(),
+      date: a.datetime().required(),
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow: any) => [allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -49,6 +51,6 @@ Fetch records from the database and use them in your frontend component.
 
 /* For example, in a React component, you can use this snippet in your
   function's RETURN statement */
-// const { data: todos } = await client.models.Todo.list()
+// const { data: expenses } = await client.models.Expense.list()
 
-// return <ul>{todos.map(todo => <li key={todo.id}>{todo.content}</li>)}</ul>
+// return <ul>{expenses.map(expense => <li key={expense.id}>{expense.name}: ${expense.amount}</li>)}</ul>
