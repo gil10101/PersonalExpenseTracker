@@ -1,24 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import './ExpenseForm.css';
 
 const ExpenseForm = ({ onSubmit }) => {
-    const [expense, setExpense] = useState({ name: "", amount: "", category: "", date: "" });
+    const [expense, setExpense] = useState({ name: "", amount: "", category: "", date: "", description: "" });
+    const [isSubmitted, setIsSubmitted] = useState(false);
+
+    // Load saved data from local storage
+    useEffect(() => {
+        const savedExpense = JSON.parse(localStorage.getItem("expense"));
+        if (savedExpense) setExpense(savedExpense);
+    }, []);
+
+    // Save form data to local storage
+    useEffect(() => {
+        localStorage.setItem("expense", JSON.stringify(expense));
+    }, [expense]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+
+        // Prevent negative values for amount
+        if (name === "amount" && value < 0) return;
+
         setExpense((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         const { name, amount, category, date } = expense;
+
         if (!name || !amount || !category || !date) {
-            alert("Please fill out all fields");
+            alert("Please fill out all required fields.");
             return;
         }
+
         onSubmit(expense);
-        setExpense({ name: "", amount: "", category: "", date: "" });
+        setExpense({ name: "", amount: "", category: "", date: "", description: "" });
+        setIsSubmitted(true);
+
+        setTimeout(() => setIsSubmitted(false), 2000);
     };
 
     return (
@@ -44,12 +65,7 @@ const ExpenseForm = ({ onSubmit }) => {
                 ))}
                 <div className="form-field">
                     <label htmlFor="category">Category</label>
-                    <select
-                        id="category"
-                        name="category"
-                        value={expense.category}
-                        onChange={handleChange}
-                    >
+                    <select id="category" name="category" value={expense.category} onChange={handleChange}>
                         <option value="">Select a category</option>
                         {["Food", "Transport", "Entertainment", "Utilities", "Other"].map((option) => (
                             <option key={option} value={option}>
@@ -58,9 +74,19 @@ const ExpenseForm = ({ onSubmit }) => {
                         ))}
                     </select>
                 </div>
+                <div className="form-field">
+                    <label htmlFor="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        value={expense.description}
+                        onChange={handleChange}
+                        placeholder="Optional: Add a description for this expense"
+                    />
+                </div>
             </div>
-            <button type="submit" className="submit-button">
-                Add Expense
+            <button type="submit" className={`submit-button ${isSubmitted ? "submitted" : ""}`}>
+                {isSubmitted ? "Expense Added!" : "Add Expense"}
             </button>
         </form>
     );

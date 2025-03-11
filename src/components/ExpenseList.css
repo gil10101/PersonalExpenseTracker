@@ -1,3 +1,4 @@
+/* Expense List Styles */
 .expense-list-container {
     background: white;
     padding: 1rem;
@@ -12,6 +13,7 @@
     font-size: 1.5rem;
 }
 
+/* Controls Section */
 .controls {
     display: flex;
     justify-content: space-between;
@@ -34,6 +36,7 @@
     outline: none;
 }
 
+/* Expense Table */
 .expense-table {
     width: 100%;
     border-collapse: collapse;
@@ -52,48 +55,113 @@
     color: white;
 }
 
-.delete-button {
-    background: #ff4757;
-    color: white;
+/* Buttons */
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.delete-button,
+.edit-button,
+.save-button,
+.description-button,
+.pagination-button {
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
     transition: background 0.3s ease;
+    color: white;
+    flex: 1;
+    text-align: center;
+    margin: 0 0.25rem;
+}
+
+.delete-button {
+    background: #ff4757;
 }
 
 .delete-button:hover {
     background: #ff6b81;
 }
 
-.pagination-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
+.edit-button,
+.save-button {
+    background: blue;
+}
+
+.edit-button:hover,
+.save-button:hover {
+    background: darkblue;
+}
+
+.description-button {
+    background: #28a745;
+}
+
+.description-button:hover {
+    background: #218838;
 }
 
 .pagination-button {
     background: #007bff;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
 }
 
 .pagination-button:hover {
     background: #0056b3;
 }
 
+/* Expense Description */
+.expense-description-container {
+    display: none;
+}
+
+.expense-description-container.visible {
+    display: table-row;
+}
+
+.expense-description td {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-left: 4px solid #28a745;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* Pagination */
+.pagination-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+/* Animations */
 @keyframes slideIn {
     from {
         opacity: 0;
         transform: translateY(20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.expense-row {
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.slide-out {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* Input Fields */
+input, select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }

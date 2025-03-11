@@ -10,23 +10,34 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
-import './ExpenseLineChart.css';
+import "./ExpenseLineChart.css";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
-const ExpenseLineChart = ({ expenses }) => {
-    // Sort expenses by date
-    const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
+const ExpenseLineChart = ({ expenses = [] }) => {
+    // Aggregate expenses by date
+    const aggregatedExpenses = expenses.reduce((acc, expense) => {
+        if (!expense?.date || !expense?.amount) return acc; // Skip invalid data
 
-    const labels = sortedExpenses.map((expense) => new Date(expense.date).toLocaleDateString());
-    const data = sortedExpenses.map((expense) => parseFloat(expense.amount));
+        const date = new Date(expense.date).toISOString().split("T")[0]; // Standardized YYYY-MM-DD format
+        acc[date] = (acc[date] || 0) + parseFloat(expense.amount);
+        return acc;
+    }, {});
+
+    // Convert to sorted arrays
+    const sortedEntries = Object.entries(aggregatedExpenses)
+        .map(([date, amount]) => ({ date: new Date(date), amount }))
+        .sort((a, b) => a.date - b.date);
+
+    const sortedLabels = sortedEntries.map(item => item.date.toLocaleDateString());
+    const sortedData = sortedEntries.map(item => item.amount);
 
     const chartData = {
-        labels,
+        labels: sortedLabels,
         datasets: [
             {
                 label: "Daily Expenses",
-                data,
+                data: sortedData,
                 fill: false,
                 backgroundColor: "rgba(75, 192, 192, 0.6)",
                 borderColor: "rgba(75, 192, 192, 1)",
@@ -38,27 +49,16 @@ const ExpenseLineChart = ({ expenses }) => {
     const chartOptions = {
         responsive: true,
         plugins: {
-            legend: {
-                position: "top",
-            },
-            title: {
-                display: true,
-                text: "Daily Expenses Over Time",
-            },
+            legend: { position: "top" },
+            title: { display: true, text: "Daily Expenses Over Time" },
         },
         scales: {
             y: {
                 beginAtZero: true,
-                title: {
-                    display: true,
-                    text: "Amount ($)",
-                },
+                title: { display: true, text: "Amount ($)" },
             },
             x: {
-                title: {
-                    display: true,
-                    text: "Date",
-                },
+                title: { display: true, text: "Date" },
             },
         },
     };
@@ -66,9 +66,7 @@ const ExpenseLineChart = ({ expenses }) => {
     return (
         <div className="expense-line-chart-container">
             <h2>Daily Expense Line Chart</h2>
-            <div>
-                <Line data={chartData} options={chartOptions} />
-            </div>
+            <Line data={chartData} options={chartOptions} />
         </div>
     );
 };
