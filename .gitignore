@@ -53,4 +53,7 @@ amplifytools.xcconfig
 # amplify
 .amplify
 amplify_outputs*
+# Don't exclude src/amplifyconfiguration.js which is needed for the build
+!src/amplifyconfiguration.js
+
 amplifyconfiguration*

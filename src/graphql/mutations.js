@@ -3,10 +3,19 @@
 
 export const createExpense = /* GraphQL */ `
   mutation CreateExpense(
-    $input: CreateExpenseInput!
-    $condition: ModelExpenseConditionInput
+    $name: String!,
+    $amount: Float!,
+    $category: String!,
+    $date: AWSDateTime!,
+    $userId: ID
   ) {
-    createExpense(input: $input, condition: $condition) {
+    createExpense(
+      name: $name,
+      amount: $amount,
+      category: $category,
+      date: $date,
+      userId: $userId
+    ) {
       id
       name
       amount
@@ -17,12 +26,22 @@ export const createExpense = /* GraphQL */ `
     }
   }
 `;
+
 export const updateExpense = /* GraphQL */ `
   mutation UpdateExpense(
-    $input: UpdateExpenseInput!
-    $condition: ModelExpenseConditionInput
+    $id: ID!,
+    $name: String,
+    $amount: Float,
+    $category: String,
+    $date: AWSDateTime
   ) {
-    updateExpense(input: $input, condition: $condition) {
+    updateExpense(
+      id: $id,
+      name: $name,
+      amount: $amount,
+      category: $category,
+      date: $date
+    ) {
       id
       name
       amount
@@ -33,12 +52,10 @@ export const updateExpense = /* GraphQL */ `
     }
   }
 `;
+
 export const deleteExpense = /* GraphQL */ `
-  mutation DeleteExpense(
-    $input: DeleteExpenseInput!
-    $condition: ModelExpenseConditionInput
-  ) {
-    deleteExpense(input: $input, condition: $condition) {
+  mutation DeleteExpense($id: ID!) {
+    deleteExpense(id: $id) {
       id
       name
       amount
@@ -49,3 +66,31 @@ export const deleteExpense = /* GraphQL */ `
     }
   }
 `;
+
+export const createBudget = /* GraphQL */ `
+  mutation CreateBudget(
+    $userId: ID!,
+    $categoryId: ID!,
+    $amount: Float!,
+    $month: Int!,
+    $year: Int!
+  ) {
+    createBudget(
+      userId: $userId,
+      categoryId: $categoryId,
+      amount: $amount,
+      month: $month,
+      year: $year
+    ) {
+      id
+      userId
+      categoryId
+      category
+      amount
+      month
+      year
+      createdAt
+      updatedAt
+    }
+  }
+`; 

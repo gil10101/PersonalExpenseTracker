@@ -1,4 +1,4 @@
-type Expense @model @auth(rules: [{ allow: owner }]) {
+type Expense {
   id: ID!
   name: String!
   amount: Float!
@@ -8,7 +8,103 @@ type Expense @model @auth(rules: [{ allow: owner }]) {
   updatedAt: AWSDateTime
 }
 
+type Category {
+  id: ID!
+  name: String!
+  description: String
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Budget {
+  id: ID!
+  userId: ID!
+  categoryId: ID!
+  category: String
+  amount: Float!
+  month: Int!
+  year: Int!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
 type Query {
-  getExpensesByCategory(category: String!): [Expense] @function(name: "getExpensesByCategory")
-  getExpensesByDateRange(startDate: AWSDateTime!, endDate: AWSDateTime!): [Expense] @function(name: "getExpensesByDateRange")
+  # Get a single value of type 'Post' by primary key.
+  singlePost(id: ID!): Post
+  
+  getExpensesByCategory(category: String!): [Expense]
+  getExpensesByDateRange(startDate: AWSDateTime!, endDate: AWSDateTime!): [Expense]
+  getAllExpenses: [Expense]
+  getAllCategories: [Category]
+  getBudgetsByMonth(userId: ID!, month: Int!, year: Int!): [Budget]
+  
+  # User operations
+  getUser(id: ID!): User
+  getUserByUsername(username: String!): User
+  getAllUsers: [User]
+}
+
+type Mutation {
+  # Put a single value of type 'Post'.
+  # If an item exists it's updated. If it does not it's created.
+  putPost(id: ID!, title: String!): Post
+  
+  createExpense(
+    name: String!,
+    amount: Float!,
+    category: String!,
+    date: AWSDateTime!,
+    userId: ID
+  ): Expense
+  
+  updateExpense(
+    id: ID!,
+    name: String,
+    amount: Float,
+    category: String,
+    date: AWSDateTime
+  ): Expense
+  
+  deleteExpense(id: ID!): Expense
+  
+  createBudget(
+    userId: ID!,
+    categoryId: ID!,
+    amount: Float!,
+    month: Int!,
+    year: Int!
+  ): Budget
+  
+  # User operations
+  createUser(
+    id: ID!,
+    username: String!,
+    email: String!
+  ): User
+  
+  updateUser(
+    id: ID!,
+    username: String,
+    email: String
+  ): User
+  
+  deleteUser(id: ID!): User
+}
+
+type Post {
+  id: ID!
+  title: String!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
 } 

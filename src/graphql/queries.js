@@ -14,6 +14,7 @@ export const getExpense = /* GraphQL */ `
     }
   }
 `;
+
 export const listExpenses = /* GraphQL */ `
   query ListExpenses(
     $filter: ModelExpenseFilterInput
@@ -34,6 +35,7 @@ export const listExpenses = /* GraphQL */ `
     }
   }
 `;
+
 export const getExpensesByCategory = /* GraphQL */ `
   query GetExpensesByCategory($category: String!) {
     getExpensesByCategory(category: $category) {
@@ -47,6 +49,7 @@ export const getExpensesByCategory = /* GraphQL */ `
     }
   }
 `;
+
 export const getExpensesByDateRange = /* GraphQL */ `
   query GetExpensesByDateRange($startDate: AWSDateTime!, $endDate: AWSDateTime!) {
     getExpensesByDateRange(startDate: $startDate, endDate: $endDate) {
@@ -60,72 +63,45 @@ export const getExpensesByDateRange = /* GraphQL */ `
     }
   }
 `;
-export const getTodo = /* GraphQL */ `
-  query GetTodo($id: ID!) {
-    getTodo(id: $id) {
+
+export const getAllExpenses = /* GraphQL */ `
+  query GetAllExpenses {
+    getAllExpenses {
+      id
+      name
+      amount
+      category
+      date
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const getAllCategories = /* GraphQL */ `
+  query GetAllCategories {
+    getAllCategories {
       id
       name
       description
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
-      __typename
     }
   }
 `;
-export const listTodos = /* GraphQL */ `
-  query ListTodos(
-    $filter: ModelTodoFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listTodos(filter: $filter, limit: $limit, nextToken: $nextToken) {
-      items {
-        id
-        name
-        description
-        createdAt
-        updatedAt
-        _version
-        _deleted
-        _lastChangedAt
-        __typename
-      }
-      nextToken
-      startedAt
-      __typename
+
+export const getBudgetsByMonth = /* GraphQL */ `
+  query GetBudgetsByMonth($userId: ID!, $month: Int!, $year: Int!) {
+    getBudgetsByMonth(userId: $userId, month: $month, year: $year) {
+      id
+      userId
+      categoryId
+      category
+      amount
+      month
+      year
+      createdAt
+      updatedAt
     }
   }
-`;
-export const syncTodos = /* GraphQL */ `
-  query SyncTodos(
-    $filter: ModelTodoFilterInput
-    $limit: Int
-    $nextToken: String
-    $lastSync: AWSTimestamp
-  ) {
-    syncTodos(
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-      lastSync: $lastSync
-    ) {
-      items {
-        id
-        name
-        description
-        createdAt
-        updatedAt
-        _version
-        _deleted
-        _lastChangedAt
-        __typename
-      }
-      nextToken
-      startedAt
-      __typename
-    }
-  }
-`;
+`; 

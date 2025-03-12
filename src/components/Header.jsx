@@ -1,22 +1,23 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Navbar, Nav, Container } from 'react-bootstrap';
 
-function Header() {
+const Header = () => {
   return (
-    <header className="app-header">
-      <div className="container">
-        <div className="header-content">
-          <h1 className="app-title">Personal Expense Tracker</h1>
-          <nav className="main-nav">
-            <ul>
-              <li><a href="#dashboard" className="active">Dashboard</a></li>
-              <li><a href="#expenses">Expenses</a></li>
-              <li><a href="#reports">Reports</a></li>
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </header>
+    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
+      <Container>
+        <Navbar.Brand as={Link} to="/">Personal Expense Tracker</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto">
+            <Nav.Link as={Link} to="/">Dashboard</Nav.Link>
+            <Nav.Link as={Link} to="/expenses">Expenses</Nav.Link>
+            <Nav.Link as={Link} to="/add-expense">Add Expense</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
-}
+};
 
 export default Header; 

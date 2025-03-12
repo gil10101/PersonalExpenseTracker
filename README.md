@@ -1,76 +1,79 @@
 # Personal Expense Tracker
 
-A React application for tracking personal expenses using AWS Amplify Gen2.
+A React application for tracking personal expenses, built with React, AWS Amplify, and AppSync.
+
+## Features
+
+- Track expenses with name, amount, category, and date
+- View expense summary on the dashboard
+- Visualize expenses with charts
+- Add, edit, and delete expenses
+- Categorize expenses
+
+## Technology Stack
+
+- **Frontend**: React 19, React Router 7, React Bootstrap
+- **State Management**: React Hooks
+- **API**: AWS AppSync (GraphQL)
+- **Authentication**: AWS Cognito
+- **Styling**: Bootstrap 5, CSS
+- **Build Tool**: Vite
+- **Charts**: Chart.js with react-chartjs-2
+
+## Project Structure
+
+```
+src/
+├── components/         # React components
+│   ├── Dashboard.jsx   # Main dashboard component
+│   ├── ExpenseForm.jsx # Form for adding/editing expenses
+│   ├── ExpenseList.jsx # List of expenses
+│   ├── Header.jsx      # Navigation header
+│   └── ...             # Chart components
+├── graphql/            # GraphQL operations
+│   ├── mutations.js    # GraphQL mutations
+│   ├── queries.js      # GraphQL queries
+│   └── subscriptions.js # GraphQL subscriptions
+├── utils/              # Utility functions
+│   ├── amplifyConfig.js # Amplify configuration
+│   └── expenseAPI.js   # API functions for expenses
+├── App.jsx             # Main application component
+├── main.jsx            # Application entry point
+└── ...                 # Other files
+```
 
 ## Setup
 
-### Environment Variables
-
-This project uses environment variables for AWS Amplify configuration. Follow these steps to set up your environment:
-
-1. Copy the `.env.example` file to a new file named `.env`:
-   ```bash
-   cp .env.example .env
+1. Clone the repository
+2. Install dependencies:
    ```
-
-2. Edit the `.env` file and replace the placeholder values with your actual AWS Amplify configuration:
-   ```
-   # Cognito Configuration
-   VITE_COGNITO_USER_POOL_ID=your-user-pool-id
-   VITE_COGNITO_USER_POOL_CLIENT_ID=your-user-pool-client-id
-   VITE_COGNITO_IDENTITY_POOL_ID=your-identity-pool-id
-
-   # API Configuration
-   VITE_GRAPHQL_ENDPOINT=your-graphql-endpoint
-   VITE_GRAPHQL_API_KEY=your-api-key
-   ```
-
-   You can find these values in your AWS Amplify console or in the `amplify_outputs.json` file after running `amplify push`.
-
-### Installation
-
-1. Install dependencies:
-   ```bash
    npm install
    ```
-
-2. Start the development server:
-   ```bash
+3. Create a `.env` file based on `.env.example` with your AWS AppSync and Cognito credentials
+4. Start the development server:
+   ```
    npm run dev
    ```
 
-## AWS Amplify Gen2 Configuration
+## Environment Variables
 
-This project uses AWS Amplify Gen2 for authentication and API access. The configuration is handled in the following files:
+The application uses the following environment variables:
 
-- `src/amplifyconfiguration.js`: Main configuration file for AWS Amplify
-- `amplify/data/resource.ts`: Data model definition
-- `amplify/auth/resource.ts`: Authentication configuration
-- `amplify/backend.ts`: Backend configuration
+- `VITE_GRAPHQL_ENDPOINT`: AppSync GraphQL endpoint
+- `VITE_GRAPHQL_API_KEY`: AppSync API key
+- `VITE_COGNITO_USER_POOL_ID`: Cognito user pool ID
+- `VITE_COGNITO_USER_POOL_CLIENT_ID`: Cognito user pool client ID
+- `VITE_COGNITO_IDENTITY_POOL_ID`: Cognito identity pool ID
+- `AWS_REGION`: AWS region for all services
 
-## Available Scripts
+## Build
 
-- `npm run dev`: Start the development server
-- `npm run build`: Build the production version
-- `npm run preview`: Preview the production build locally
-- `npm run lint`: Run ESLint to check for code issues
+To build the application for production:
 
-## Features
-- Create, read, update, and delete expenses
-- Categorize expenses
-- View expense history
-- Filter expenses by category and date range
-- Visualize spending patterns
-
-## Troubleshooting
-- If you encounter GraphQL errors, check that your schema matches the expected input/output types
-- For authentication issues, verify your Cognito setup
-- For database connection issues, check your AWS RDS configuration
-
-## Deployment
-To deploy your application to AWS:
 ```
-npx amplify publish
+npm run build
 ```
 
-This will build your React application and deploy it to AWS Amplify hosting.
+## License
+
+MIT

@@ -1,4 +1,4 @@
-import { client } from '../amplifyconfiguration.js';
+import { client } from './amplifyConfig.js';
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
 
@@ -12,13 +12,19 @@ export const createExpense = async (expenseData) => {
     console.log('Creating expense with data:', expenseData);
     const response = await client.graphql({
       query: mutations.createExpense,
-      variables: { input: expenseData }
+      variables: {
+        name: expenseData.name,
+        amount: expenseData.amount,
+        category: expenseData.category,
+        date: expenseData.date,
+        userId: expenseData.userId || null
+      },
+      authMode: 'apiKey'
     });
     console.log('Create expense response:', response);
     return response.data.createExpense;
   } catch (error) {
     console.error('Error creating expense:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 };
@@ -30,11 +36,10 @@ export const createExpense = async (expenseData) => {
 export const listExpenses = async () => {
   try {
     console.log('Fetching expenses...');
-    // For debugging, let's log the query being used
-    console.log('Query:', queries.listExpenses);
     
     const response = await client.graphql({
-      query: queries.listExpenses
+      query: queries.getAllExpenses,
+      authMode: 'apiKey'
     });
     
     console.log('List expenses response:', response);
@@ -42,18 +47,12 @@ export const listExpenses = async () => {
     // If we have errors but the request didn't throw, log them
     if (response.errors) {
       console.error('GraphQL errors:', response.errors);
-    }
-    
-    // Return empty array if data is null to prevent further errors
-    if (!response.data || !response.data.listExpenses || !response.data.listExpenses.items) {
-      console.warn('No expenses data returned, using empty array');
       return [];
     }
     
-    return response.data.listExpenses.items;
+    return response.data.getAllExpenses || [];
   } catch (error) {
     console.error('Error listing expenses:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     // Return empty array to prevent app from crashing
     return [];
   }
@@ -69,13 +68,13 @@ export const getExpense = async (id) => {
     console.log('Getting expense with ID:', id);
     const response = await client.graphql({
       query: queries.getExpense,
-      variables: { id }
+      variables: { id },
+      authMode: 'apiKey'
     });
     console.log('Get expense response:', response);
     return response.data.getExpense;
   } catch (error) {
     console.error('Error getting expense:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 };
@@ -90,13 +89,19 @@ export const updateExpense = async (expenseData) => {
     console.log('Updating expense with data:', expenseData);
     const response = await client.graphql({
       query: mutations.updateExpense,
-      variables: { input: expenseData }
+      variables: {
+        id: expenseData.id,
+        name: expenseData.name,
+        amount: expenseData.amount,
+        category: expenseData.category,
+        date: expenseData.date
+      },
+      authMode: 'apiKey'
     });
     console.log('Update expense response:', response);
     return response.data.updateExpense;
   } catch (error) {
     console.error('Error updating expense:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 };
@@ -111,13 +116,13 @@ export const deleteExpense = async (id) => {
     console.log('Deleting expense with ID:', id);
     const response = await client.graphql({
       query: mutations.deleteExpense,
-      variables: { input: { id } }
+      variables: { id },
+      authMode: 'apiKey'
     });
     console.log('Delete expense response:', response);
     return response.data.deleteExpense;
   } catch (error) {
     console.error('Error deleting expense:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 }; 

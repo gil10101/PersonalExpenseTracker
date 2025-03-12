@@ -1,0 +1,42 @@
+{
+  "version": "2018-05-29",
+  "statements": [
+    #if($context.info.fieldName.startsWith("get"))
+      "SELECT * FROM #if($context.info.parentTypeName == 'Expense') expenses #elseif($context.info.parentTypeName == 'Category') categories #elseif($context.info.parentTypeName == 'Budget') budgets #end"
+      #if($context.arguments.id) "WHERE id = '$context.arguments.id'" #end
+    #elseif($context.info.fieldName.startsWith("create"))
+      #if($context.info.parentTypeName == 'Expense')
+        "INSERT INTO expenses (name, amount, category, date, userId) VALUES ('$context.arguments.name', $context.arguments.amount, '$context.arguments.category', '$context.arguments.date', '$context.arguments.userId')",
+        "SELECT * FROM expenses WHERE id = LAST_INSERT_ID()"
+      #elseif($context.info.parentTypeName == 'Category')
+        "INSERT INTO categories (name, description) VALUES ('$context.arguments.name', '$context.arguments.description')",
+        "SELECT * FROM categories WHERE id = LAST_INSERT_ID()"
+      #elseif($context.info.parentTypeName == 'Budget')
+        "INSERT INTO budgets (userId, categoryId, amount, month, year) VALUES ('$context.arguments.userId', '$context.arguments.categoryId', $context.arguments.amount, $context.arguments.month, $context.arguments.year)",
+        "SELECT * FROM budgets WHERE id = LAST_INSERT_ID()"
+      #end
+    #elseif($context.info.fieldName.startsWith("update"))
+      #if($context.info.parentTypeName == 'Expense')
+        "UPDATE expenses SET name = '$context.arguments.name', amount = $context.arguments.amount, category = '$context.arguments.category', date = '$context.arguments.date' WHERE id = '$context.arguments.id'",
+        "SELECT * FROM expenses WHERE id = '$context.arguments.id'"
+      #elseif($context.info.parentTypeName == 'Category')
+        "UPDATE categories SET name = '$context.arguments.name', description = '$context.arguments.description' WHERE id = '$context.arguments.id'",
+        "SELECT * FROM categories WHERE id = '$context.arguments.id'"
+      #elseif($context.info.parentTypeName == 'Budget')
+        "UPDATE budgets SET amount = $context.arguments.amount, month = $context.arguments.month, year = $context.arguments.year WHERE id = '$context.arguments.id'",
+        "SELECT * FROM budgets WHERE id = '$context.arguments.id'"
+      #end
+    #elseif($context.info.fieldName.startsWith("delete"))
+      #if($context.info.parentTypeName == 'Expense')
+        "SELECT * FROM expenses WHERE id = '$context.arguments.id'",
+        "DELETE FROM expenses WHERE id = '$context.arguments.id'"
+      #elseif($context.info.parentTypeName == 'Category')
+        "SELECT * FROM categories WHERE id = '$context.arguments.id'",
+        "DELETE FROM categories WHERE id = '$context.arguments.id'"
+      #elseif($context.info.parentTypeName == 'Budget')
+        "SELECT * FROM budgets WHERE id = '$context.arguments.id'",
+        "DELETE FROM budgets WHERE id = '$context.arguments.id'"
+      #end
+    #end
+  ]
+}

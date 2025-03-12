@@ -14,6 +14,7 @@ export const onCreateExpense = /* GraphQL */ `
     }
   }
 `;
+
 export const onUpdateExpense = /* GraphQL */ `
   subscription OnUpdateExpense($filter: ModelSubscriptionExpenseFilterInput) {
     onUpdateExpense(filter: $filter) {
@@ -27,6 +28,7 @@ export const onUpdateExpense = /* GraphQL */ `
     }
   }
 `;
+
 export const onDeleteExpense = /* GraphQL */ `
   subscription OnDeleteExpense($filter: ModelSubscriptionExpenseFilterInput) {
     onDeleteExpense(filter: $filter) {
@@ -39,4 +41,4 @@ export const onDeleteExpense = /* GraphQL */ `
       updatedAt
     }
   }
-`;
+`; 

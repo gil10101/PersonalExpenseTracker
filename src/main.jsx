@@ -1,19 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
-import './styles/normalize.css'
-import './styles/variables.css'
-import './styles/typography.css'
-import './styles/layout.css'
-import './styles/components.css'
-import { configureAmplify } from './amplifyconfiguration.js'
+import './App.css'
+import { Amplify } from 'aws-amplify'
+import { client, config } from './utils/amplifyConfig.js'
 
-// Configure Amplify Gen 2
-configureAmplify();
+// Log configuration for debugging
+console.log('Amplify configuration loaded:', config);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>,
 )

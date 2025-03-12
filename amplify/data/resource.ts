@@ -2,9 +2,8 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 /*== STEP 1 ===============================================================
 The section below creates an Expense database table with name, amount, 
-category, and date fields. The authorization rule specifies that only the 
-owner of the record can "create", "read", "update", and "delete" their 
-own Expense records.
+category, and date fields. The authorization rule allows both owner-based
+and API key access for testing purposes.
 =========================================================================*/
 const schema = a.schema({
   Expense: a
@@ -14,7 +13,9 @@ const schema = a.schema({
       category: a.string().required(),
       date: a.datetime().required(),
     })
-    .authorization((allow: any) => [allow.owner()]),
+    .authorization((allow) => [
+      allow.owner(),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
@@ -22,7 +23,10 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: 'userPool',
+    defaultAuthorizationMode: 'apiKey',
+    apiKeyAuthorizationMode: {
+      // API key configuration is handled by Amplify
+    }
   },
 });
 

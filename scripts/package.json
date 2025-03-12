@@ -1,0 +1,17 @@
+{
+  "name": "personal-expense-tracker-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for Personal Expense Tracker",
+  "type": "module",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-appsync": "^3.529.1",
+    "@aws-sdk/client-iam": "^3.529.1",
+    "aws-amplify": "^6.0.17",
+    "dotenv": "^16.4.7",
+    "mysql2": "^3.13.0",
+    "uuid": "^11.1.0"
+  }
+}
