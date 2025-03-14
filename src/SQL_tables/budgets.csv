@@ -1,0 +1,9 @@
+Field,Type,Null,Key,Default,Extra
+id,varchar(36),NO,PRI,NULL,
+userId,varchar(36),NO,MUL,NULL,
+categoryId,varchar(36),NO,MUL,NULL,
+amount,"decimal(10,2)",NO,,NULL,
+month,int,NO,,NULL,
+year,int,NO,,NULL,
+createdAt,timestamp,YES,,CURRENT_TIMESTAMP,DEFAULT_GENERATED
+updatedAt,timestamp,YES,,CURRENT_TIMESTAMP,DEFAULT_GENERATED on update CURRENT_TIMESTAMP

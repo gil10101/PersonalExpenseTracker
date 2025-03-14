@@ -6,7 +6,10 @@
       #if($context.arguments.id) "WHERE id = '$context.arguments.id'" #end
     #elseif($context.info.fieldName.startsWith("create"))
       #if($context.info.parentTypeName == 'Expense')
-        "INSERT INTO expenses (name, amount, category, date, userId) VALUES ('$context.arguments.name', $context.arguments.amount, '$context.arguments.category', '$context.arguments.date', '$context.arguments.userId')",
+        ## Convert ISO8601 date to MySQL datetime format
+        #set($isoDate = $context.arguments.date)
+        #set($mysqlDate = $isoDate.replace('T', ' ').replace('Z', ''))
+        "INSERT INTO expenses (name, amount, category, date, userId) VALUES ('$context.arguments.name', $context.arguments.amount, '$context.arguments.category', '$mysqlDate', '$context.arguments.userId')",
         "SELECT * FROM expenses WHERE id = LAST_INSERT_ID()"
       #elseif($context.info.parentTypeName == 'Category')
         "INSERT INTO categories (name, description) VALUES ('$context.arguments.name', '$context.arguments.description')",
@@ -17,7 +20,10 @@
       #end
     #elseif($context.info.fieldName.startsWith("update"))
       #if($context.info.parentTypeName == 'Expense')
-        "UPDATE expenses SET name = '$context.arguments.name', amount = $context.arguments.amount, category = '$context.arguments.category', date = '$context.arguments.date' WHERE id = '$context.arguments.id'",
+        ## Convert ISO8601 date to MySQL datetime format
+        #set($isoDate = $context.arguments.date)
+        #set($mysqlDate = $isoDate.replace('T', ' ').replace('Z', ''))
+        "UPDATE expenses SET name = '$context.arguments.name', amount = $context.arguments.amount, category = '$context.arguments.category', date = '$mysqlDate' WHERE id = '$context.arguments.id'",
         "SELECT * FROM expenses WHERE id = '$context.arguments.id'"
       #elseif($context.info.parentTypeName == 'Category')
         "UPDATE categories SET name = '$context.arguments.name', description = '$context.arguments.description' WHERE id = '$context.arguments.id'",

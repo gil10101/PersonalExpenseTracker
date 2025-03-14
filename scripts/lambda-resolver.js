@@ -21,6 +21,9 @@ const initializePool = async () => {
     console.log('Creating connection pool...');
     console.log(`Host: ${process.env.DB_HOST}`);
     console.log(`Database: ${process.env.DB_NAME}`);
+    console.log(`User: ${process.env.DB_USERNAME}`);
+    console.log(`Port: ${process.env.DB_PORT || 3306}`);
+    
     pool = mysql.createPool({
       ...dbConfig,
       waitForConnections: true,
@@ -37,7 +40,7 @@ const executeQuery = async (query, params = []) => {
   try {
     const pool = await initializePool();
     console.log(`Executing query: ${query}`);
-    console.log('Parameters:', params);
+    console.log('Parameters:', JSON.stringify(params));
     const [rows] = await pool.execute(query, params);
     console.log(`Query executed successfully, returned ${rows.length} rows`);
     return rows;
@@ -85,6 +88,13 @@ const resolvers = {
   // Mutation resolvers
   Mutation: {
     createExpense: async (name, amount, category, date, userId) => {
+      console.log('Creating expense with params:', { name, amount, category, date, userId });
+      
+      // Validate required fields
+      if (!name || !amount || !category || !date) {
+        throw new Error('Missing required fields: name, amount, category, and date are required');
+      }
+      
       // Generate a UUID for the expense
       const expenseId = require('crypto').randomUUID();
       
@@ -96,19 +106,10 @@ const resolvers = {
       try {
         // Insert the expense
         const insertExpenseQuery = `
-          INSERT INTO expenses (id, name, amount, category, date)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO expenses (id, name, amount, category, date, userId)
+          VALUES (?, ?, ?, ?, ?, ?)
         `;
-        await connection.execute(insertExpenseQuery, [expenseId, name, amount, category, date]);
-        
-        // Link the expense to the user
-        if (userId) {
-          const linkExpenseQuery = `
-            INSERT INTO user_expenses (user_id, expense_id)
-            VALUES (?, ?)
-          `;
-          await connection.execute(linkExpenseQuery, [userId, expenseId]);
-        }
+        await connection.execute(insertExpenseQuery, [expenseId, name, amount, category, date, userId]);
         
         // Commit the transaction
         await connection.commit();
@@ -120,12 +121,14 @@ const resolvers = {
           amount,
           category,
           date,
+          userId,
           createdAt: new Date(),
           updatedAt: new Date()
         };
       } catch (error) {
         // Rollback the transaction in case of error
         await connection.rollback();
+        console.error('Error creating expense:', error);
         throw error;
       } finally {
         connection.release();
@@ -224,6 +227,10 @@ exports.handler = async (event) => {
   try {
     // Extract the GraphQL operation from the event
     const { field, arguments: args } = event;
+    
+    console.log('Lambda handler received event:', JSON.stringify(event, null, 2));
+    console.log('Field:', field);
+    console.log('Arguments:', JSON.stringify(args, null, 2));
     
     // Determine if it's a query or mutation
     const operationType = field.startsWith('get') || field === 'getAllExpenses' || field === 'getAllCategories' || field === 'getBudgetsByMonth'

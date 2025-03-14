@@ -1,0 +1,5 @@
+Field,Type,Null,Key,Default,Extra
+id,varchar(36),NO,PRI,NULL,
+title,varchar(255),NO,,NULL,
+createdAt,datetime,YES,,CURRENT_TIMESTAMP,DEFAULT_GENERATED
+updatedAt,datetime,YES,,CURRENT_TIMESTAMP,DEFAULT_GENERATED on update CURRENT_TIMESTAMP

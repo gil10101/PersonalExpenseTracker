@@ -7,13 +7,18 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup-lambda-resolvers": "node scripts/setup-lambda-resolvers.js",
+    "setup-test-resolver": "node scripts/setup-manual-resolver.js"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.9.2",
+    "@aws-sdk/client-rds-data": "^3.758.0",
+    "@aws-sdk/client-appsync": "^3.758.0",
     "aws-amplify": "^6.13.4",
     "bootstrap": "^5.3.2",
     "chart.js": "^4.4.8",
+    "mysql2": "^3.13.0",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-bootstrap": "^2.9.0",
@@ -22,7 +27,6 @@
     "react-router-dom": "^7.2.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-appsync": "^3.758.0",
     "@eslint/js": "^9.21.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",

@@ -1,8 +1,10 @@
 {
   "version": "2018-05-29",
-  "operation": "Invoke",
-  "payload": {
-    "field": $util.toJson($context.info.fieldName),
-    "arguments": $util.toJson($context.arguments)
-  }
+  "statements": [
+    ## Convert ISO8601 date to MySQL datetime format
+    #set($isoDate = $context.arguments.date)
+    #set($mysqlDate = $isoDate.replace('T', ' ').replace('Z', ''))
+    "INSERT INTO expenses (name, amount, category, date, userId) VALUES ('$context.arguments.name', $context.arguments.amount, '$context.arguments.category', '$mysqlDate', '$context.arguments.userId')",
+    "SELECT * FROM expenses WHERE id = LAST_INSERT_ID()"
+  ]
 }

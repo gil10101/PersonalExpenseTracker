@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { createExpense, getExpense, updateExpense } from '../utils/expenseAPI';
+import { useAuth } from '../utils/AuthContext';
 import './ExpenseForm.css';
 
 const ExpenseForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -80,63 +82,72 @@ const ExpenseForm = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     
-    // Validate form
+    // Validate required fields
     if (!formData.name || !formData.amount || !formData.category || !formData.date) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    // Validate amount is a positive number
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      setError('Amount must be a positive number');
+      alert('Please fill in all required fields');
       return;
     }
     
     try {
-      setLoading(true);
-      setError(null);
+      // Format date for AWS AppSync AWSDateTime compatibility
+      let formattedDate = formData.date;
+      try {
+        // Create a date object and ensure it's valid
+        const dateObj = new Date(formData.date);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error('Invalid date');
+        }
+        
+        // Format as ISO-8601 string for AWSDateTime scalar type
+        formattedDate = dateObj.toISOString();
+        
+        console.log('Formatted date in form:', formattedDate);
+      } catch (err) {
+        console.error('Error formatting date in form:', err);
+        // Keep original date if there's an error in formatting
+      }
       
-      const expenseData = {
+      const updatedData = {
         ...formData,
+        date: formattedDate,
         amount: parseFloat(formData.amount),
-        date: new Date(formData.date).toISOString()
+        userId: user?.id || user?.email || null // Include user ID from auth context
       };
       
+      console.log('User data available:', user);
+      console.log('Sending expense with userId:', updatedData.userId);
+      
       if (isEditMode) {
-        // Update existing expense
-        await updateExpense({
-          id,
-          ...expenseData
-        });
+        await updateExpense(updatedData);
         setSuccess('Expense updated successfully!');
       } else {
-        // Create new expense
-        await createExpense(expenseData);
+        await createExpense(updatedData);
         setSuccess('Expense added successfully!');
-        
-        // Reset form after successful submission
-        setFormData({
-          name: '',
-          amount: '',
-          category: '',
-          date: new Date().toISOString().split('T')[0]
-        });
       }
+      
+      // Reset form after submission
+      setFormData({
+        name: '',
+        amount: '',
+        category: '',
+        date: new Date().toISOString().split('T')[0]
+      });
       
       // Navigate back to expenses list after a short delay
       setTimeout(() => {
         navigate('/expenses');
       }, 1500);
       
-    } catch (err) {
-      console.error('Error saving expense:', err);
+      // Trigger refresh of expense list if onSave is defined
+      if (typeof onSave === 'function') {
+        onSave();
+      }
+    } catch (error) {
+      console.error('Error saving expense:', error);
       setError('Failed to save expense. Please try again later.');
-    } finally {
-      setLoading(false);
     }
   };
 

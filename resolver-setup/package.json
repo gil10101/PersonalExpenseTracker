@@ -1,0 +1,17 @@
+{
+  "name": "appsync-resolver-setup",
+  "version": "1.0.0",
+  "description": "Script to create and update AWS AppSync resolvers",
+  "main": "create_resolvers.js",
+  "scripts": {
+    "setup": "node create_resolvers.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-appsync": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "",
+  "license": "MIT"
+} 

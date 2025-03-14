@@ -4,6 +4,7 @@ type Expense {
   amount: Float!
   category: String!
   date: AWSDateTime!
+  userId: ID
   createdAt: AWSDateTime
   updatedAt: AWSDateTime
 }
@@ -42,7 +43,7 @@ type Query {
   
   getExpensesByCategory(category: String!): [Expense]
   getExpensesByDateRange(startDate: AWSDateTime!, endDate: AWSDateTime!): [Expense]
-  getAllExpenses: [Expense]
+  getAllExpenses(userId: ID): [Expense]
   getAllCategories: [Category]
   getBudgetsByMonth(userId: ID!, month: Int!, year: Int!): [Budget]
   
@@ -70,7 +71,8 @@ type Mutation {
     name: String,
     amount: Float,
     category: String,
-    date: AWSDateTime
+    date: AWSDateTime,
+    userId: ID
   ): Expense
   
   deleteExpense(id: ID!): Expense

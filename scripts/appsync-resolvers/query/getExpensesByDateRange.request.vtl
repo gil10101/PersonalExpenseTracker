@@ -1,8 +1,11 @@
 {
   "version": "2018-05-29",
-  "operation": "Invoke",
-  "payload": {
-    "field": $util.toJson($context.info.fieldName),
-    "arguments": $util.toJson($context.arguments)
-  }
+  "statements": [
+    ## Convert ISO8601 dates to MySQL datetime format
+    #set($startIsoDate = $context.arguments.startDate)
+    #set($endIsoDate = $context.arguments.endDate)
+    #set($startMysqlDate = $startIsoDate.replace('T', ' ').replace('Z', ''))
+    #set($endMysqlDate = $endIsoDate.replace('T', ' ').replace('Z', ''))
+    "SELECT * FROM expenses WHERE date BETWEEN '$startMysqlDate' AND '$endMysqlDate' ORDER BY date DESC"
+  ]
 }

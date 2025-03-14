@@ -1,8 +1,10 @@
 {
   "version": "2018-05-29",
-  "operation": "Invoke",
-  "payload": {
-    "field": $util.toJson($context.info.fieldName),
-    "arguments": $util.toJson($context.arguments)
-  }
+  "statements": [
+    #if($context.arguments.userId)
+      "SELECT * FROM expenses WHERE userId = '$context.arguments.userId' ORDER BY date DESC"
+    #else
+      "SELECT * FROM expenses ORDER BY date DESC"
+    #end
+  ]
 }

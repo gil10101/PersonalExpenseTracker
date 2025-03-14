@@ -65,13 +65,14 @@ export const getExpensesByDateRange = /* GraphQL */ `
 `;
 
 export const getAllExpenses = /* GraphQL */ `
-  query GetAllExpenses {
-    getAllExpenses {
+  query GetAllExpenses($userId: ID) {
+    getAllExpenses(userId: $userId) {
       id
       name
       amount
       category
       date
+      userId
       createdAt
       updatedAt
     }
@@ -102,6 +103,35 @@ export const getBudgetsByMonth = /* GraphQL */ `
       year
       createdAt
       updatedAt
+    }
+  }
+`;
+
+export const getPost = /* GraphQL */ `
+  query GetPost($id: ID!) {
+    getPost(id: $id) {
+      id
+      title
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const listPosts = /* GraphQL */ `
+  query ListPosts(
+    $filter: ModelPostFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPosts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        title
+        createdAt
+        updatedAt
+      }
+      nextToken
     }
   }
 `; 

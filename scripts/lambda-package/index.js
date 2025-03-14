@@ -21,6 +21,9 @@ const initializePool = async () => {
     console.log('Creating connection pool...');
     console.log(`Host: ${process.env.DB_HOST}`);
     console.log(`Database: ${process.env.DB_NAME}`);
+    console.log(`User: ${process.env.DB_USERNAME}`);
+    console.log(`Port: ${process.env.DB_PORT || 3306}`);
+    
     pool = mysql.createPool({
       ...dbConfig,
       waitForConnections: true,
@@ -37,10 +40,34 @@ const executeQuery = async (query, params = []) => {
   try {
     const pool = await initializePool();
     console.log(`Executing query: ${query}`);
-    console.log('Parameters:', params);
+    console.log('Parameters:', JSON.stringify(params));
     const [rows] = await pool.execute(query, params);
     console.log(`Query executed successfully, returned ${rows.length} rows`);
-    return rows;
+    
+    // Transform the database column names to match GraphQL field names
+    const transformedRows = rows.map(row => {
+      // Create a new object to avoid modifying the original row
+      const transformedRow = {};
+      
+      // Copy each property with the correct name
+      for (const key in row) {
+        // For fields that might be in snake_case in the database
+        // Map user_id to userId, created_at to createdAt, etc.
+        const camelCaseKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        
+        // Use the camelCase key for the transformation
+        transformedRow[camelCaseKey] = row[key];
+        
+        // Also keep the original key if it's different
+        if (camelCaseKey !== key) {
+          transformedRow[key] = row[key];
+        }
+      }
+      
+      return transformedRow;
+    });
+    
+    return transformedRows;
   } catch (error) {
     console.error('Error executing query:', error);
     throw error;
@@ -61,9 +88,33 @@ const resolvers = {
       return executeQuery(query, [startDate, endDate]);
     },
     
-    getAllExpenses: async () => {
-      const query = 'SELECT * FROM expenses ORDER BY date DESC';
-      return executeQuery(query);
+    getAllExpenses: async (userId) => {
+      let query = 'SELECT * FROM expenses';
+      let params = [];
+      
+      // If userId is provided, add a WHERE clause
+      if (userId) {
+        query += ' WHERE userId = ?';
+        params.push(userId);
+      }
+      
+      // Add ordering
+      query += ' ORDER BY date DESC';
+      
+      // Execute the query and get transformed results
+      const results = await executeQuery(query, params);
+      
+      // Additional explicit field mapping to ensure GraphQL compatibility
+      return results.map(expense => ({
+        id: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        category: expense.category,
+        date: expense.date,
+        userId: expense.userId || expense.user_id, // Handle both possible column names
+        createdAt: expense.createdAt || expense.created_at, // Handle both possible column names
+        updatedAt: expense.updatedAt || expense.updated_at // Handle both possible column names
+      }));
     },
     
     getAllCategories: async () => {
@@ -85,6 +136,13 @@ const resolvers = {
   // Mutation resolvers
   Mutation: {
     createExpense: async (name, amount, category, date, userId) => {
+      console.log('Creating expense with params:', { name, amount, category, date, userId });
+      
+      // Validate required fields
+      if (!name || !amount || !category || !date) {
+        throw new Error('Missing required fields: name, amount, category, and date are required');
+      }
+      
       // Generate a UUID for the expense
       const expenseId = require('crypto').randomUUID();
       
@@ -96,19 +154,10 @@ const resolvers = {
       try {
         // Insert the expense
         const insertExpenseQuery = `
-          INSERT INTO expenses (id, name, amount, category, date)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO expenses (id, name, amount, category, date, userId)
+          VALUES (?, ?, ?, ?, ?, ?)
         `;
-        await connection.execute(insertExpenseQuery, [expenseId, name, amount, category, date]);
-        
-        // Link the expense to the user
-        if (userId) {
-          const linkExpenseQuery = `
-            INSERT INTO user_expenses (user_id, expense_id)
-            VALUES (?, ?)
-          `;
-          await connection.execute(linkExpenseQuery, [userId, expenseId]);
-        }
+        await connection.execute(insertExpenseQuery, [expenseId, name, amount, category, date, userId]);
         
         // Commit the transaction
         await connection.commit();
@@ -120,12 +169,14 @@ const resolvers = {
           amount,
           category,
           date,
+          userId,
           createdAt: new Date(),
           updatedAt: new Date()
         };
       } catch (error) {
         // Rollback the transaction in case of error
         await connection.rollback();
+        console.error('Error creating expense:', error);
         throw error;
       } finally {
         connection.release();
@@ -224,6 +275,10 @@ exports.handler = async (event) => {
   try {
     // Extract the GraphQL operation from the event
     const { field, arguments: args } = event;
+    
+    console.log('Lambda handler received event:', JSON.stringify(event, null, 2));
+    console.log('Field:', field);
+    console.log('Arguments:', JSON.stringify(args, null, 2));
     
     // Determine if it's a query or mutation
     const operationType = field.startsWith('get') || field === 'getAllExpenses' || field === 'getAllCategories' || field === 'getBudgetsByMonth'

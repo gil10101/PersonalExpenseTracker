@@ -21,6 +21,7 @@ export const createExpense = /* GraphQL */ `
       amount
       category
       date
+      userId
       createdAt
       updatedAt
     }
@@ -33,20 +34,23 @@ export const updateExpense = /* GraphQL */ `
     $name: String,
     $amount: Float,
     $category: String,
-    $date: AWSDateTime
+    $date: AWSDateTime,
+    $userId: ID
   ) {
     updateExpense(
       id: $id,
       name: $name,
       amount: $amount,
       category: $category,
-      date: $date
+      date: $date,
+      userId: $userId
     ) {
       id
       name
       amount
       category
       date
+      userId
       createdAt
       updatedAt
     }
@@ -61,6 +65,7 @@ export const deleteExpense = /* GraphQL */ `
       amount
       category
       date
+      userId
       createdAt
       updatedAt
     }
@@ -89,6 +94,49 @@ export const createBudget = /* GraphQL */ `
       amount
       month
       year
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const createPost = /* GraphQL */ `
+  mutation CreatePost(
+    $title: String!
+  ) {
+    createPost(
+      title: $title
+    ) {
+      id
+      title
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const updatePost = /* GraphQL */ `
+  mutation UpdatePost(
+    $id: ID!,
+    $title: String
+  ) {
+    updatePost(
+      id: $id,
+      title: $title
+    ) {
+      id
+      title
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const deletePost = /* GraphQL */ `
+  mutation DeletePost($id: ID!) {
+    deletePost(id: $id) {
+      id
+      title
       createdAt
       updatedAt
     }

@@ -51,6 +51,40 @@ const ExpenseCarousel = ({ expenses, onDelete, onEdit }) => {
         setCurrentMonth(parseInt(e.target.value));
     };
 
+    // Helper function to parse dates consistently
+    const parseDate = (dateString) => {
+        try {
+            // Try to parse as is (should work for ISO-8601 format)
+            const dateObj = new Date(dateString);
+            
+            // Check if the date is valid
+            if (!isNaN(dateObj.getTime())) {
+                return dateObj;
+            }
+            
+            // If invalid, try alternative parsing
+            if (dateString.includes('T')) {
+                // It's an ISO format but might be malformed
+                const datePart = dateString.split('T')[0];
+                const [year, month, day] = datePart.split('-');
+                return new Date(year, month - 1, day);
+            } else if (dateString.includes(' ')) {
+                // It's a MySQL format
+                const datePart = dateString.split(' ')[0];
+                const [year, month, day] = datePart.split('-');
+                return new Date(year, month - 1, day);
+            } else {
+                // It's just a date string YYYY-MM-DD
+                const [year, month, day] = dateString.split('-');
+                return new Date(year, month - 1, day);
+            }
+        } catch (err) {
+            console.error('Error parsing date:', dateString, err);
+            // Return current date as fallback
+            return new Date();
+        }
+    };
+
     // Process expenses data for charts
     useEffect(() => {
         if (!expenses || expenses.length === 0) {
@@ -65,7 +99,7 @@ const ExpenseCarousel = ({ expenses, onDelete, onEdit }) => {
         
         // Filter expenses for current month and year
         const filteredExpenses = expenses.filter(expense => {
-            const expenseDate = new Date(expense.date);
+            const expenseDate = parseDate(expense.date);
             return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
         });
         
@@ -74,7 +108,8 @@ const ExpenseCarousel = ({ expenses, onDelete, onEdit }) => {
         const dailyExpenses = Array(daysInMonth).fill(0);
         
         filteredExpenses.forEach(expense => {
-            const day = new Date(expense.date).getDate() - 1;
+            const expenseDate = parseDate(expense.date);
+            const day = expenseDate.getDate() - 1;
             dailyExpenses[day] += parseFloat(expense.amount);
         });
         
@@ -118,7 +153,7 @@ const ExpenseCarousel = ({ expenses, onDelete, onEdit }) => {
             
             // Calculate total expenses for this month
             const monthExpenses = expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
+                const expenseDate = parseDate(expense.date);
                 return expenseDate.getMonth() === month && expenseDate.getFullYear() === year;
             });
             
@@ -148,7 +183,7 @@ const ExpenseCarousel = ({ expenses, onDelete, onEdit }) => {
 
     // Filter expenses for the current month and year for ExpenseList
     const filteredExpenses = expenses ? expenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
+        const expenseDate = parseDate(expense.date);
         return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
     }) : [];
 

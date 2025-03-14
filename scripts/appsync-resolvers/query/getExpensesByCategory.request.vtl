@@ -1,8 +1,6 @@
 {
   "version": "2018-05-29",
-  "operation": "Invoke",
-  "payload": {
-    "field": $util.toJson($context.info.fieldName),
-    "arguments": $util.toJson($context.arguments)
-  }
+  "statements": [
+    "SELECT * FROM expenses WHERE category = '$context.arguments.category' ORDER BY date DESC"
+  ]
 }
