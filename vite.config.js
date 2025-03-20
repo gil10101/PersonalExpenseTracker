@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-// Removing the tailwindcss import as it's not installed
-// import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,10 +10,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        // Add any aliases if needed
+        '@': path.resolve(__dirname, './src')
       }
     },
     css: {

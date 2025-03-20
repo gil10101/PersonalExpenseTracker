@@ -1,19 +1,17 @@
 import React, { useMemo } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import './ExpensePieChart.css';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const ExpensePieChart = ({ data }) => {
-    // Always create chart data and options with useMemo to prevent unnecessary re-renders
+    // Use incoming props for chart data
     const chartData = useMemo(() => ({
         labels: data?.labels || [],
         datasets: [
             {
-                label: 'Expenses by Category',
-                data: data?.values || [],
+                data: data?.datasets?.[0]?.data || [],
                 backgroundColor: [
                     'rgba(255, 99, 132, 0.7)',
                     'rgba(54, 162, 235, 0.7)',
@@ -42,29 +40,19 @@ const ExpensePieChart = ({ data }) => {
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'right',
+                position: 'bottom',
                 labels: {
                     font: {
                         family: "'Inter', sans-serif",
                         size: 12
                     },
-                    padding: 20,
+                    padding: 15,
                     usePointStyle: true,
                     boxWidth: 8
                 }
             },
             title: {
-                display: true,
-                text: 'Expenses by Category',
-                font: {
-                    family: "'Inter', sans-serif",
-                    size: 16,
-                    weight: 'bold'
-                },
-                padding: {
-                    top: 10,
-                    bottom: 20
-                }
+                display: false
             },
             tooltip: {
                 backgroundColor: "rgba(17, 24, 39, 0.8)",
@@ -82,38 +70,34 @@ const ExpensePieChart = ({ data }) => {
                     label: function(context) {
                         const label = context.label || '';
                         const value = context.raw || 0;
-                        return `${label}: $${value.toFixed(2)}`;
+                        const total = context.chart._metasets[context.datasetIndex].total;
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: $${value.toFixed(2)} (${percentage}%)`;
                     }
                 }
             }
         },
         animation: {
-            duration: 1000,
+            duration: 800,
             easing: 'easeOutQuart'
+        },
+        layout: {
+            padding: 10
         }
     }), []);
 
     // Handle empty data case
     if (!data?.labels?.length) {
         return (
-            <div className="expense-pie-chart-container">
-                <h2>Expenses by Category</h2>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <p style={{ color: "#6B7280", fontSize: "1rem", textAlign: "center" }}>
-                        No expense data available for this period.<br />
-                        Add some expenses to see your category breakdown!
-                    </p>
-                </div>
+            <div className="flex items-center justify-center h-full min-h-[200px] bg-muted rounded-md text-muted-foreground text-sm p-4 text-center">
+                <p>No expense data available for this period.</p>
             </div>
         );
     }
 
     return (
-        <div className="expense-pie-chart-container">
-            <h2>Expenses by Category</h2>
-            <div>
-                <Pie data={chartData} options={chartOptions} />
-            </div>
+        <div className="flex-grow flex items-center justify-center w-full h-full min-h-[250px] relative animate-in fade-in duration-300">
+            <Pie data={chartData} options={chartOptions} />
         </div>
     );
 };

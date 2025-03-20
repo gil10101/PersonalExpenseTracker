@@ -4,19 +4,17 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
 import './App.css'
-import { Amplify } from 'aws-amplify'
-import { configureAmplify } from './utils/amplifyConfig.js'
+import { AuthProvider } from './utils/AuthContext.jsx'
 
-// Configure Amplify
-const client = configureAmplify();
-
-// Log configuration for debugging
-console.log('Amplify configuration loaded and client initialized');
+// Initialize the app
+console.log('App initialization complete');
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

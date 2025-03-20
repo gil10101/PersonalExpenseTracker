@@ -1,6 +1,0 @@
-{
-  "version": "2018-05-29",
-  "statements": [
-    "SELECT b.*, c.name as category FROM budgets b JOIN categories c ON b.categoryId = c.id WHERE b.userId = '$context.arguments.userId' AND b.month = $context.arguments.month AND b.year = $context.arguments.year"
-  ]
-}

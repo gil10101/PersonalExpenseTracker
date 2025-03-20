@@ -9,7 +9,6 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import './ExpenseBarChart.css';
 
 // Register ChartJS components
 ChartJS.register(
@@ -21,59 +20,98 @@ ChartJS.register(
   Legend
 );
 
-const ExpenseBarChart = ({ data }) => {
-  // Create chart data with useMemo to prevent unnecessary re-renders
+const ExpenseBarChart = ({ expenses }) => {
+  // Transform expense data into chart format
+  const { categoryData, categories } = useMemo(() => {
+    // Group expenses by category
+    const categoryMap = {};
+    
+    if (!expenses || !expenses.length) {
+      return { categoryData: [], categories: [] };
+    }
+
+    expenses.forEach(expense => {
+      const category = expense.category || 'Other';
+      const amount = parseFloat(expense.amount) || 0;
+      
+      if (!categoryMap[category]) {
+        categoryMap[category] = 0;
+      }
+      categoryMap[category] += amount;
+    });
+
+    // Sort categories by amount (highest first)
+    const sortedCategories = Object.keys(categoryMap).sort(
+      (a, b) => categoryMap[b] - categoryMap[a]
+    );
+
+    // Get the top categories (limit to 6 for readability)
+    const topCategories = sortedCategories.slice(0, 6);
+    
+    // Create data array
+    const categoryAmounts = topCategories.map(cat => categoryMap[cat]);
+    
+    return { 
+      categoryData: categoryAmounts,
+      categories: topCategories 
+    };
+  }, [expenses]);
+
+  // Create chart data
   const chartData = useMemo(() => ({
-    labels: data?.labels || [],
+    labels: categories,
     datasets: [
       {
-        label: 'Monthly Expenses',
-        data: data?.values || [],
-        backgroundColor: 'rgba(99, 102, 241, 0.7)',
-        borderColor: 'rgba(99, 102, 241, 1)',
+        label: 'Expenses by Category',
+        data: categoryData,
+        backgroundColor: [
+          'rgba(99, 102, 241, 0.7)',
+          'rgba(79, 70, 229, 0.7)',
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(245, 158, 11, 0.7)',
+          'rgba(239, 68, 68, 0.7)',
+        ],
+        borderColor: [
+          'rgba(99, 102, 241, 1)',
+          'rgba(79, 70, 229, 1)',
+          'rgba(59, 130, 246, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(245, 158, 11, 1)',
+          'rgba(239, 68, 68, 1)',
+        ],
         borderWidth: 1,
         borderRadius: 6,
-        hoverBackgroundColor: 'rgba(79, 70, 229, 0.8)',
+        hoverBackgroundColor: [
+          'rgba(99, 102, 241, 0.9)',
+          'rgba(79, 70, 229, 0.9)',
+          'rgba(59, 130, 246, 0.9)',
+          'rgba(16, 185, 129, 0.9)',
+          'rgba(245, 158, 11, 0.9)',
+          'rgba(239, 68, 68, 0.9)',
+        ],
       },
     ],
-  }), [data]);
+  }), [categoryData, categories]);
 
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
+    indexAxis: 'y',
     layout: {
       padding: {
-        top: 20,
-        right: 25,
-        bottom: 20,
-        left: 25
+        top: 5,
+        right: 15,
+        bottom: 5,
+        left: 15
       }
     },
     plugins: {
       legend: {
-        position: 'top',
-        labels: {
-          font: {
-            family: "'Inter', sans-serif",
-            size: 12
-          },
-          padding: 20,
-          usePointStyle: true,
-          boxWidth: 8
-        }
+        display: false
       },
       title: {
-        display: true,
-        text: 'Monthly Comparison',
-        font: {
-          family: "'Inter', sans-serif",
-          size: 16,
-          weight: 'bold'
-        },
-        padding: {
-          top: 10,
-          bottom: 20
-        }
+        display: false
       },
       tooltip: {
         backgroundColor: "rgba(17, 24, 39, 0.8)",
@@ -98,8 +136,18 @@ const ExpenseBarChart = ({ data }) => {
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.05)",
-          drawBorder: false
+          display: false,
+        },
+        ticks: {
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          }
+        }
+      },
+      x: {
+        grid: {
+          color: 'rgba(243, 244, 246, 1)',
         },
         ticks: {
           font: {
@@ -108,72 +156,27 @@ const ExpenseBarChart = ({ data }) => {
           },
           callback: function(value) {
             return '$' + value;
-          },
-          padding: 10
-        },
-        title: {
-          display: true,
-          text: "Amount ($)",
-          font: {
-            family: "'Inter', sans-serif",
-            size: 13,
-            weight: 'bold'
-          },
-          padding: {bottom: 10}
-        },
-      },
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: {
-            family: "'Inter', sans-serif",
-            size: 12
-          },
-          padding: 10
-        },
-        title: {
-          display: true,
-          text: "Month",
-          font: {
-            family: "'Inter', sans-serif",
-            size: 13,
-            weight: 'bold'
-          },
-          padding: {top: 10}
-        },
-      },
+          }
+        }
+      }
     },
     animation: {
-      duration: 1000,
-      easing: 'easeOutQuart'
-    },
-    barPercentage: 0.7,
-    categoryPercentage: 0.7
+      duration: 1000
+    }
   }), []);
 
   // Handle empty data case
-  if (!data?.labels?.length) {
+  if (!categoryData.length) {
     return (
-      <div className="expense-bar-chart-container">
-        <h2>Monthly Comparison</h2>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-          <p style={{ color: "#6B7280", fontSize: "1rem", textAlign: "center" }}>
-            No expense data available for comparison.<br />
-            Add expenses across multiple months to see trends!
-          </p>
-        </div>
+      <div className="flex items-center justify-center h-full min-h-[200px] bg-muted rounded-md text-muted-foreground text-sm p-4 text-center">
+        <p>No expense data available for categories.</p>
       </div>
     );
   }
 
   return (
-    <div className="expense-bar-chart-container">
-      <h2>Monthly Comparison</h2>
-      <div>
-        <Bar data={chartData} options={chartOptions} />
-      </div>
+    <div className="flex-grow flex items-center justify-center w-full h-full min-h-[250px] relative animate-in slide-in-from-left duration-600">
+      <Bar data={chartData} options={chartOptions} />
     </div>
   );
 };

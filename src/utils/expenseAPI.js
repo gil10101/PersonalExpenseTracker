@@ -1,6 +1,4 @@
-import { client } from './amplifyConfig.js';
-import * as mutations from '../graphql/mutations';
-import * as queries from '../graphql/queries';
+import api from './amplifyConfig.js';
 
 // Helper function to delay execution
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -35,28 +33,18 @@ export const createExpense = async (expenseData) => {
       throw new Error('Missing required fields');
     }
     
-    // Using consistent field names with the database (camelCase)
-    const response = await client.graphql({
-      query: mutations.createExpense,
-      variables: {
-        name: expenseData.name,
-        amount: parseFloat(expenseData.amount), // Ensure amount is a number
-        category: expenseData.category,
-        date: expenseData.date,
-        userId: expenseData.userId || null
-      },
-      authMode: 'apiKey'
+    // Using consistent field names with the database
+    const response = await api.createExpense({
+      title: expenseData.name,
+      amount: parseFloat(expenseData.amount), // Ensure amount is a number
+      category: expenseData.category,
+      date: expenseData.date,
+      userId: expenseData.userId || '1', // Default to user 1 if not provided
+      description: expenseData.description || ''
     });
     
-    // Clear the cache after creating a new expense
-    expensesCache = {
-      data: null,
-      timestamp: 0,
-      userId: null
-    };
-    
     console.log('Create expense response:', response);
-    return response.data.createExpense;
+    return response;
   } catch (error) {
     console.error('Error creating expense:', error);
     throw error;
@@ -146,171 +134,84 @@ const processExpenses = (rawExpenses, errors = []) => {
  * @returns {Promise} - Array of expenses
  */
 export const listExpenses = async (userId = null) => {
-  // Force a specific userId for testing
-  const testUserId = '51cb1580-3061-700d-4892-a1d7f5432576';
-  const effectiveUserId = testUserId; // Use testUserId instead of the passed userId
-  
-  // Check if we have a valid cache for this user
-  const now = Date.now();
-  const cacheAge = now - expensesCache.timestamp;
-  const cacheValid = expensesCache.data && 
-                    expensesCache.userId === effectiveUserId && 
-                    cacheAge < 60000; // Cache valid for 60 seconds (increased from 30)
-  
-  if (cacheValid) {
-    console.log('Using cached expenses data (age: ' + (cacheAge / 1000).toFixed(1) + 's)');
-    return expensesCache.data;
+  try {
+    // Default to user 1 if no userId provided
+    const effectiveUserId = userId || '1';
+    
+    console.log(`Fetching expenses for userId: ${effectiveUserId}`);
+    
+    const expenses = await api.getExpenses(effectiveUserId);
+    
+    // Convert expense objects to match expected format in components
+    return expenses.map(expense => ({
+      id: expense.id,
+      name: expense.title, // Map title to name for existing components
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date,
+      description: expense.description,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt
+    }));
+  } catch (error) {
+    console.error('Error fetching expenses:', error);
+    return [];
   }
-  
-  // Implement retry logic with exponential backoff
-  const maxRetries = 5; // Increased from 3
-  let retryCount = 0;
-  let lastResponse = null;
-  
-  while (retryCount <= maxRetries) {
-    try {
-      // Add a small delay before making the request (even on first attempt)
-      const baseDelay = retryCount === 0 ? 100 : Math.pow(2, retryCount) * 500; // 100ms, 1s, 2s, 4s, 8s
-      await sleep(baseDelay);
-      
-      console.log(`Fetching expenses for userId: ${effectiveUserId} (attempt ${retryCount + 1}/${maxRetries + 1})`);
-      
-      const response = await client.graphql({
-        query: queries.getAllExpenses,
-        variables: { userId: effectiveUserId },
-        authMode: 'apiKey'
-      });
-      
-      lastResponse = response;
-      
-      // Check if we have partial data (some expenses but with errors)
-      const rawExpenses = response.data?.getAllExpenses || [];
-      const errors = response.errors || [];
-      
-      // Even with errors, process what data we have
-      const processedExpenses = processExpenses(rawExpenses, errors);
-      
-      // If we have some usable data, update cache and return it
-      if (processedExpenses.length > 0) {
-        // Only cache if at least 50% of expenses have real data
-        const realExpenses = processedExpenses.filter(e => !e.isPlaceholder);
-        if (realExpenses.length >= Math.floor(processedExpenses.length * 0.5)) {
-          // Update cache
-          expensesCache = {
-            data: processedExpenses,
-            timestamp: now,
-            userId: effectiveUserId
-          };
-        }
-        
-        return processedExpenses;
-      }
-      
-      // Check if we need to retry due to rate limiting
-      const hasRateLimitError = errors.some(err => 
-        err?.message?.includes('Rate Exceeded') || 
-        err?.errorType === 'Lambda:IllegalArgument'
-      );
-      
-      if (hasRateLimitError && retryCount < maxRetries) {
-        console.log(`Rate limit error detected, retrying (${retryCount + 1}/${maxRetries})`);
-        retryCount++;
-        continue;
-      }
-      
-      // If we reached here with no data but no retry-able errors, return empty array
-      return [];
-      
-    } catch (error) {
-      console.error(`Error fetching expenses (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
-      
-      // Check if this is a rate limit error
-      if ((error.message && error.message.includes('Rate Exceeded')) && retryCount < maxRetries) {
-        retryCount++;
-        await sleep(1000); // Additional delay for rate limit errors
-      } else {
-        // For other errors or if we've exhausted retries
-        // Try to salvage any data from the last response
-        if (lastResponse && lastResponse.data && lastResponse.data.getAllExpenses) {
-          const processedExpenses = processExpenses(lastResponse.data.getAllExpenses, lastResponse.errors || []);
-          if (processedExpenses.length > 0) {
-            return processedExpenses;
-          }
-        }
-        return [];
-      }
-    }
-  }
-  
-  // If we've exhausted all retries, but have lastResponse with some data, try to use it
-  if (lastResponse && lastResponse.data && lastResponse.data.getAllExpenses) {
-    const processedExpenses = processExpenses(lastResponse.data.getAllExpenses, lastResponse.errors || []);
-    if (processedExpenses.length > 0) {
-      return processedExpenses;
-    }
-  }
-  
-  // Ultimate fallback
-  return [];
 };
 
 /**
- * Get an expense by ID
+ * Get a specific expense by ID
  * @param {string} id - The expense ID
- * @returns {Promise} - The expense
+ * @returns {Promise} - The expense data
  */
 export const getExpense = async (id) => {
   try {
-    console.log('Getting expense with ID:', id);
-    const response = await client.graphql({
-      query: queries.getExpense,
-      variables: { id },
-      authMode: 'apiKey'
-    });
-    console.log('Get expense response:', response);
-    return response.data.getExpense;
+    const expense = await api.getExpense(id);
+    
+    // Convert to match expected format in components
+    return {
+      id: expense.id,
+      name: expense.title,
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date,
+      description: expense.description,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt
+    };
   } catch (error) {
-    console.error('Error getting expense:', error);
+    console.error('Error fetching expense details:', error);
     throw error;
   }
 };
 
 /**
- * Update an expense
- * @param {Object} expenseData - The expense data with ID
+ * Update an existing expense
+ * @param {Object} expenseData - The updated expense data
  * @returns {Promise} - The updated expense
  */
 export const updateExpense = async (expenseData) => {
   try {
-    console.log('Updating expense with data:', expenseData);
-    
-    // Validate required fields
-    if (!expenseData.id) {
-      throw new Error('Missing expense ID');
-    }
-    
-    // Format date if it exists in the update data
-    let variables = { ...expenseData };
-    if (variables.date && typeof variables.date === 'string' && !variables.date.includes('T')) {
-      // If date is in YYYY-MM-DD format, convert to ISO format for AWSDateTime
-      variables.date = new Date(variables.date + 'T12:00:00Z').toISOString();
-    }
-    
-    const response = await client.graphql({
-      query: mutations.updateExpense,
-      variables: variables,
-      authMode: 'apiKey'
+    // Map from component fields to API fields
+    const response = await api.updateExpense(expenseData.id, {
+      title: expenseData.name,
+      amount: parseFloat(expenseData.amount),
+      category: expenseData.category,
+      date: expenseData.date,
+      description: expenseData.description || ''
     });
     
-    // Clear the cache after updating an expense
-    expensesCache = {
-      data: null,
-      timestamp: 0,
-      userId: null
+    // Convert response to match expected format
+    return {
+      id: response.id,
+      name: response.title,
+      amount: response.amount,
+      category: response.category,
+      date: response.date,
+      description: response.description,
+      createdAt: response.createdAt,
+      updatedAt: response.updatedAt
     };
-    
-    console.log('Update expense response:', response);
-    return response.data.updateExpense;
   } catch (error) {
     console.error('Error updating expense:', error);
     throw error;
@@ -318,28 +219,14 @@ export const updateExpense = async (expenseData) => {
 };
 
 /**
- * Delete an expense
- * @param {string} id - The expense ID
- * @returns {Promise} - The deleted expense
+ * Delete an expense by ID
+ * @param {string} id - The expense ID to delete
+ * @returns {Promise} - The deleted expense data
  */
 export const deleteExpense = async (id) => {
   try {
-    console.log('Deleting expense with ID:', id);
-    const response = await client.graphql({
-      query: mutations.deleteExpense,
-      variables: { id },
-      authMode: 'apiKey'
-    });
-    
-    // Clear the cache after deleting an expense
-    expensesCache = {
-      data: null,
-      timestamp: 0,
-      userId: null
-    };
-    
-    console.log('Delete expense response:', response);
-    return response.data.deleteExpense;
+    const response = await api.deleteExpense(id);
+    return response;
   } catch (error) {
     console.error('Error deleting expense:', error);
     throw error;

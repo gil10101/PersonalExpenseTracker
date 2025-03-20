@@ -11,7 +11,6 @@ import {
     Legend,
     Filler,
 } from "chart.js";
-import "./ExpenseLineChart.css";
 
 ChartJS.register(
     CategoryScale, 
@@ -192,10 +191,10 @@ const ExpenseLineChart = ({ data }) => {
     // Handle empty data case
     if (!data?.labels?.length) {
         return (
-            <div className="expense-line-chart-container">
-                <h2>Daily Expenses</h2>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <p style={{ color: "#6B7280", fontSize: "1rem", textAlign: "center" }}>
+            <div className="relative bg-card p-6 rounded-lg shadow-sm border border-border flex flex-col overflow-visible h-full w-full min-h-[300px] animate-in fade-in duration-300">
+                <h2 className="mb-4 text-foreground text-base font-semibold text-left pb-2 border-b border-border">Daily Expenses</h2>
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground text-base text-center">
                         No expense data available for this period.<br />
                         Add some expenses to see your daily spending!
                     </p>
@@ -205,9 +204,9 @@ const ExpenseLineChart = ({ data }) => {
     }
 
     return (
-        <div className="expense-line-chart-container">
-            <h2>Daily Expenses</h2>
-            <div>
+        <div className="relative bg-card p-6 rounded-lg shadow-sm border border-border flex flex-col overflow-visible h-full w-full min-h-[300px] animate-in fade-in duration-300">
+            <h2 className="mb-4 text-foreground text-base font-semibold text-left pb-2 border-b border-border">Daily Expenses</h2>
+            <div className="flex-grow flex items-center justify-center w-full h-full min-h-[250px] relative">
                 <Line 
                     ref={chartRef}
                     data={chartData} 

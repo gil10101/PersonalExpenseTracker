@@ -1,9 +1,0 @@
-{
-  "name": "expense-tracker-lambda",
-  "version": "1.0.0",
-  "description": "Lambda resolver for Personal Expense Tracker",
-  "main": "index.js",
-  "dependencies": {
-    "mysql2": "^3.13.0"
-  }
-}

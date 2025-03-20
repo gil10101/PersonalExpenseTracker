@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert, Container, Card } from 'react-bootstrap';
-import { resetPassword, confirmResetPassword } from 'aws-amplify/auth';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
+import { toast } from "sonner";
+
+// Import shadcn components
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Link } from 'react-router-dom';
+
+// Create schema for form validation
+const formSchema = z.object({
+  username: z.string().min(1, { message: "Username is required" }),
+});
 
 const ForgotPassword = () => {
-  const [username, setUsername] = useState('');
-  const [code, setCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -21,135 +28,78 @@ const ForgotPassword = () => {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
+  // Initialize form
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
+
+  const onSubmit = async (values) => {
     setLoading(true);
 
     try {
-      await resetPassword({ username });
-      setMessage('Check your email for the confirmation code');
-      setShowConfirmation(true);
+      // In a real app, this would send a password reset email
+      // For our mock implementation, we'll just simulate success
+      setTimeout(() => {
+        toast.success('Password reset link has been sent to your email');
+        setLoading(false);
+        // After showing the message for 2 seconds, redirect to login
+        setTimeout(() => navigate('/login'), 2000);
+      }, 1000);
     } catch (err) {
       console.error('Error requesting password reset:', err);
-      setError(err.message || 'Failed to request password reset');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConfirmation = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMessage('');
-    
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      await confirmResetPassword({
-        username,
-        confirmationCode: code,
-        newPassword
-      });
-      setMessage('Password has been reset successfully');
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      console.error('Error confirming password reset:', err);
-      setError(err.message || 'Failed to reset password');
-    } finally {
+      toast.error(err.message || 'Failed to request password reset');
       setLoading(false);
     }
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-      <Card style={{ width: '400px' }} className="p-4 shadow">
-        <Card.Body>
-          <h2 className="text-center mb-4">{showConfirmation ? 'Reset Password' : 'Forgot Password'}</h2>
-          {error && <Alert variant="danger">{error}</Alert>}
-          {message && <Alert variant="success">{message}</Alert>}
-          
-          {!showConfirmation ? (
-            <Form onSubmit={handleSubmit}>
-              <Form.Group className="mb-3">
-                <Form.Label>Username</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </Form.Group>
+    <div className="flex justify-center items-center min-h-[80vh]">
+      <Card className="w-[400px] shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
+          <CardDescription className="text-center">
+            Enter your username and we'll send you a link to reset your password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button
-                variant="primary"
                 type="submit"
-                className="w-100 mt-3"
+                className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Reset Code'}
+                {loading ? 'Sending...' : 'Reset Password'}
               </Button>
-            </Form>
-          ) : (
-            <Form onSubmit={handleConfirmation}>
-              <Form.Group className="mb-3">
-                <Form.Label>Confirmation Code</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>New Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Confirm New Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </Form.Group>
-              <Button
-                variant="primary"
-                type="submit"
-                className="w-100 mt-3"
-                disabled={loading}
-              >
-                {loading ? 'Resetting...' : 'Reset Password'}
-              </Button>
-            </Form>
-          )}
-          
-          <div className="text-center mt-3">
-            <p>
-              Remember your password?{' '}
-              <a href="/login" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>
-                Sign In
-              </a>
-            </p>
-          </div>
-        </Card.Body>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p>
+            Remember your password?{' '}
+            <Link to="/login" className="text-blue-600 hover:underline">
+              Log In
+            </Link>
+          </p>
+        </CardFooter>
       </Card>
-    </Container>
+    </div>
   );
 };
 

@@ -1,11 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Alert, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import ExpenseChart from './ExpenseChart';
 import ExpensePieChart from './ExpensePieChart';
 import ExpenseBarChart from './ExpenseBarChart';
 import { listExpenses } from '../utils/expenseAPI';
 import { useAuth } from '../utils/AuthContext';
+import { toast } from "sonner";
+
+// Import shadcn components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Import tabler icons to replace heroicons
+import {
+  IconArrowUp,
+  IconArrowDown,
+  IconCoin,
+  IconAlertTriangle,
+  IconChartBar,
+  IconClock,
+  IconTag,
+  IconCreditCard,
+  IconChartLine,
+  IconPlus,
+  IconChevronRight
+} from '@tabler/icons-react';
+
+// Import icon utilities
+import { tablerIconProps } from '../utils/iconUtils';
 
 const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
@@ -16,8 +49,8 @@ const Dashboard = () => {
   const [placeholderCount, setPlaceholderCount] = useState(0);
   const { user } = useAuth();
 
-  // Get user email (prefer email attribute, fallback to username)
-  const userEmail = user?.email || user?.username || 'User';
+  // Get user display name (prefer name, fallback to username, then to email)
+  const userDisplayName = user?.name || (user?.email ? user.email.split('@')[0] : user?.username) || 'User';
 
   // Function to check if an expense is a placeholder
   const isPlaceholderExpense = (expense) => {
@@ -40,227 +73,407 @@ const Dashboard = () => {
       const data = await listExpenses(user?.id);
       
       if (data && Array.isArray(data)) {
-        setExpenses(data);
-        
-        // Count placeholder expenses
-        const placeholders = data.filter(expense => isPlaceholderExpense(expense));
-        setPlaceholderCount(placeholders.length);
-        
-        // Calculate total expenses safely - exclude placeholders from total
-        const realExpenses = data.filter(expense => !isPlaceholderExpense(expense));
-        const total = realExpenses.reduce((sum, expense) => {
-          const amount = typeof expense.amount === 'number' ? expense.amount : 0;
-          return sum + amount;
-        }, 0);
-        
-        setTotalExpense(total);
-        
         // Reset retry count on success
         setRetryCount(0);
+        
+        // Calculate total expenses
+        const total = data.reduce((sum, expense) => {
+          const amount = parseFloat(expense.amount);
+          return !isNaN(amount) ? sum + amount : sum;
+        }, 0);
+        setTotalExpense(total);
+        
+        // Sort expenses by date (most recent first)
+        const sortedExpenses = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+        setExpenses(sortedExpenses);
+        
+        // Count placeholder expenses
+        const placeholders = data.filter(expense => isPlaceholderExpense(expense)).length;
+        setPlaceholderCount(placeholders);
+
+        // Show success toast if data loaded successfully
+        if (data.length > 0) {
+          toast.success(`Loaded ${data.length} expenses`);
+        }
       } else {
-        // If we got no data
+        console.error('Unexpected response format:', data);
         setExpenses([]);
         setTotalExpense(0);
-        setPlaceholderCount(0);
-        
-        // Only show error if this is not a retry
-        if (retryCount === 0) {
-          setError('No expense data available. Please try again later.');
-        }
+        toast.error("Failed to load expense data");
       }
     } catch (err) {
       console.error('Error fetching expenses:', err);
-      setError('Failed to load expenses. Please try again later.');
-      setExpenses([]);
-      setTotalExpense(0);
-      setPlaceholderCount(0);
+      setError('Failed to load expenses. Please try again.');
+      toast.error("Failed to load expenses. Please try again.");
+      
+      // If error persists after retries, show a specific message
+      if (retryCount > 2) {
+        setError('There seems to be a problem connecting to the database. Please try again later.');
+      }
+      
+      setRetryCount(prevCount => prevCount + 1);
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle retry
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    fetchExpenses();
-  };
-
-  // Fetch expenses when component mounts or user changes
+  // Load data on component mount
   useEffect(() => {
     if (user) {
       fetchExpenses();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user]); // Reload when user changes
 
-  // Group expenses by category - with safety checks and excluding placeholders
-  const expensesByCategory = expenses
-    .filter(expense => !isPlaceholderExpense(expense)) // Only include real expenses
-    .reduce((acc, expense) => {
-      if (!expense) return acc;
-      
-      const category = expense.category || 'Other';
-      const amount = typeof expense.amount === 'number' ? expense.amount : 0;
-      
-      if (!acc[category]) {
-        acc[category] = 0;
-      }
-      acc[category] += amount;
-      return acc;
-    }, {});
-
-  // Format data for pie chart
-  const pieChartData = {
-    labels: Object.keys(expensesByCategory),
-    datasets: [
-      {
-        data: Object.values(expensesByCategory),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
-        ]
-      }
-    ]
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(amount);
   };
 
-  if (loading) return (
-    <Container>
-      <div className="text-center mt-5">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading dashboard data...</span>
-        </Spinner>
-        <p className="mt-2">Loading your expense data...</p>
-      </div>
-    </Container>
-  );
+  // Get most frequent category
+  const getMostFrequentCategory = () => {
+    if (!expenses.length) return 'N/A';
+    
+    const categoryCount = {};
+    expenses.forEach(expense => {
+      const category = expense.category || 'Uncategorized';
+      categoryCount[category] = (categoryCount[category] || 0) + 1;
+    });
+    
+    let maxCategory = '';
+    let maxCount = 0;
+    
+    Object.entries(categoryCount).forEach(([category, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        maxCategory = category;
+      }
+    });
+    
+    return maxCategory;
+  };
 
-  return (
-    <Container>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>
-          Dashboard
-          {placeholderCount > 0 && (
-            <Badge bg="warning" className="ms-2" style={{ fontSize: '0.5em', verticalAlign: 'middle' }}>
-              {placeholderCount} partial
-            </Badge>
-          )}
-        </h2>
-        <div className="d-flex align-items-center">
-          <Button 
-            variant="outline-secondary" 
-            className="me-3" 
-            onClick={handleRetry}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-          <p className="mb-0 text-muted">Welcome back, <strong>{userEmail}</strong>!</p>
+  // Get spending by category
+  const getSpendingByCategory = () => {
+    const categoryTotals = {};
+    
+    expenses.forEach(expense => {
+      const category = expense.category || 'Uncategorized';
+      const amount = parseFloat(expense.amount) || 0;
+      categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+    });
+    
+    return categoryTotals;
+  };
+
+  // Find highest expense
+  const getHighestExpense = () => {
+    if (!expenses.length) return { name: 'N/A', amount: 0 };
+    
+    return expenses.reduce((highest, expense) => {
+      const amount = parseFloat(expense.amount) || 0;
+      return amount > highest.amount ? { name: expense.name, amount } : highest;
+    }, { name: '', amount: 0 });
+  };
+
+  // Get recent expenses (last 5)
+  const getRecentExpenses = () => {
+    return expenses.slice(0, 5);
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="mb-8">
+          <Skeleton className="size-12 w-3/4 mb-4" />
+          <Skeleton className="size-4 w-1/2" />
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <Skeleton className="h-[180px] rounded-lg" />
+          <Skeleton className="h-[180px] rounded-lg" />
+          <Skeleton className="h-[180px] rounded-lg" />
+          <Skeleton className="h-[180px] rounded-lg" />
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[300px] rounded-lg" />
+          <Skeleton className="h-[300px] rounded-lg" />
         </div>
       </div>
-      
-      {placeholderCount > 0 && (
-        <Alert variant="warning" className="mb-3">
-          <p className="mb-0">
-            <strong>Note:</strong> Some expense data is incomplete. 
-            {placeholderCount} of {expenses.length} expenses are showing partial data. 
-            Click "Refresh" to try loading full data.
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <Alert variant="destructive" className="mb-6">
+          <IconAlertTriangle {...tablerIconProps('md')} className="text-destructive" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <div className="flex justify-center">
+          <Button onClick={() => fetchExpenses()}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  // No expenses message
+  if (expenses.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 text-[hsl(var(--foreground))]">
+              Welcome, {userDisplayName}
+            </h1>
+            <p className="text-muted-foreground">
+              Get started by adding your first expense
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <Button asChild variant="default" className="group">
+              <Link to="/add-expense" className="flex items-center gap-2">
+                <span>Add New Expense</span>
+                <span className="flex size-6 items-center justify-center rounded-full bg-[hsl(var(--background))]">
+                  <IconArrowUp {...tablerIconProps('xs')} className="text-emerald-500" />
+                </span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center py-12 px-4 rounded-lg border border-dashed bg-muted/30">
+          <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <IconCoin {...tablerIconProps('2xl')} className="text-primary" />
+          </div>
+          <h2 className="text-xl font-medium mb-2">No expenses yet</h2>
+          <p className="text-muted-foreground mb-6 text-center max-w-md">
+            Track your spending by adding your first expense to get started with your personal finance management
           </p>
-        </Alert>
-      )}
-      
-      {error && (
-        <Alert variant="danger" className="d-flex justify-content-between align-items-center mb-4">
-          <span>{error}</span>
-          <Button variant="outline-danger" size="sm" onClick={handleRetry}>
-            Try Again
+          <Button asChild size="lg" className="px-8">
+            <Link to="/add-expense">Add Your First Expense</Link>
           </Button>
-        </Alert>
-      )}
-      
-      <Row className="mb-4">
-        <Col md={4}>
-          <Card className="text-center h-100">
-            <Card.Body>
-              <Card.Title>Total Expenses</Card.Title>
-              <Card.Text className="display-4">${totalExpense.toFixed(2)}</Card.Text>
-              {placeholderCount > 0 && (
-                <small className="text-muted d-block mb-2">
-                  (Excludes {placeholderCount} partial expenses)
-                </small>
-              )}
-              <Link to="/expenses">
-                <Button variant="primary">View All Expenses</Button>
-              </Link>
-            </Card.Body>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 text-[hsl(var(--foreground))]">
+            Welcome, {userDisplayName}
+          </h1>
+          <p className="text-muted-foreground">
+            Here's an overview of your expenses
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0">
+          <Button asChild variant="default" className="group">
+            <Link to="/add-expense" className="flex items-center gap-2">
+              <span>Add New Expense</span>
+              <span className="flex size-6 items-center justify-center rounded-full bg-[hsl(var(--background))]">
+                <IconArrowUp {...tablerIconProps('xs')} />
+              </span>
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="stats-cards grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <IconCoin {...tablerIconProps('sm')} className="text-primary" />
+              Total Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(totalExpense)}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <IconTag {...tablerIconProps('sm')} className="text-primary" />
+              Top Category
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {getMostFrequentCategory()}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <IconClock {...tablerIconProps('sm')} className="text-primary" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {getRecentExpenses().length > 0 ? getRecentExpenses()[0].name : 'No recent expenses'}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+        {/* Expense Charts */}
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="shadow-sm border-[hsl(var(--border))]/50 overflow-hidden">
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle>Expense Breakdown</CardTitle>
+                  <CardDescription>
+                    Visual representation of your spending
+                  </CardDescription>
+                </div>
+                <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+                  <IconChartLine {...tablerIconProps('sm')} className="text-primary" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs defaultValue="pie" className="w-full">
+                <div className="px-6 py-2 border-b border-[hsl(var(--border))]/30">
+                  <TabsList className="grid grid-cols-3 h-9 w-full max-w-[400px]">
+                    <TabsTrigger value="pie">Pie Chart</TabsTrigger>
+                    <TabsTrigger value="bar">Bar Chart</TabsTrigger>
+                    <TabsTrigger value="line">Line Chart</TabsTrigger>
+                  </TabsList>
+                </div>
+                
+                <TabsContent value="pie" className="mt-0 pt-6">
+                  <div className="px-6 pb-6">
+                    <ExpensePieChart data={expenses} />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="bar" className="mt-0 pt-6">
+                  <div className="px-6 pb-6">
+                    <ExpenseBarChart data={expenses} />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="line" className="mt-0 pt-6">
+                  <div className="px-6 pb-6">
+                    <ExpenseChart data={expenses} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
           </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="text-center h-100">
-            <Card.Body>
-              <Card.Title>Categories</Card.Title>
-              <Card.Text className="display-4">{Object.keys(expensesByCategory).length}</Card.Text>
-              <Link to="/add-expense">
-                <Button variant="success">Add New Expense</Button>
-              </Link>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="text-center h-100">
-            <Card.Body>
-              <Card.Title>Transactions</Card.Title>
-              <Card.Text className="display-4">
-                {expenses.length - placeholderCount}
-                {placeholderCount > 0 && (
-                  <small className="text-muted" style={{ fontSize: '0.4em' }}> (+{placeholderCount} partial)</small>
-                )}
-              </Card.Text>
-              <Link to="/expenses">
-                <Button variant="info">View Transactions</Button>
-              </Link>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      
-      {(expenses.length - placeholderCount) > 0 ? (
-        <Row>
-          <Col md={6} className="mb-4">
-            <Card>
-              <Card.Body>
-                <Card.Title>Expense Distribution</Card.Title>
-                {Object.keys(expensesByCategory).length > 0 ? (
-                  <ExpensePieChart data={pieChartData} />
+        </div>
+
+        {/* Recent Expenses */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="shadow-sm border-[hsl(var(--border))]/50 overflow-hidden">
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle>Recent Expenses</CardTitle>
+                  <CardDescription>Your latest transactions</CardDescription>
+                </div>
+                <div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+                  <IconClock {...tablerIconProps('sm')} className="text-primary" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0 pt-6">
+              <div className="px-6 pb-6 space-y-4">
+                {getRecentExpenses().length > 0 ? (
+                  getRecentExpenses().map(expense => (
+                    <div 
+                      key={expense.id} 
+                      className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--accent))]/20 border border-[hsl(var(--border))]/30 hover:bg-[hsl(var(--accent))]/40 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="flex size-9 items-center justify-center rounded-full bg-primary/10">
+                          <IconCoin {...tablerIconProps('sm')} className="text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm truncate max-w-[120px] sm:max-w-[200px]">{expense.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground">{new Date(expense.date).toLocaleDateString()}</p>
+                            <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">
+                              {expense.category || 'Uncategorized'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="font-semibold text-sm">{formatCurrency(expense.amount)}</div>
+                    </div>
+                  ))
                 ) : (
-                  <div className="text-center text-muted py-4">
-                    No complete expense data available for chart
+                  <div className="text-center py-6">
+                    <p className="text-muted-foreground">No expenses yet</p>
+                    <Button asChild className="mt-4">
+                      <Link to="/add-expense">Add Your First Expense</Link>
+                    </Button>
                   </div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6} className="mb-4">
-            <Card>
-              <Card.Body>
-                <Card.Title>Expenses by Category</Card.Title>
-                {Object.keys(expensesByCategory).length > 0 ? (
-                  <ExpenseBarChart expenses={expenses.filter(e => !isPlaceholderExpense(e))} />
-                ) : (
-                  <div className="text-center text-muted py-4">
-                    No complete expense data available for chart
+                
+                {getRecentExpenses().length > 0 && (
+                  <div className="pt-4 flex justify-center border-t border-[hsl(var(--border))]/30 mt-6">
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/expenses" className="flex items-center gap-2">
+                        <span>View All Expenses</span>
+                        <span className="flex size-6 items-center justify-center rounded-full bg-[hsl(var(--background))]">
+                          <IconArrowUp {...tablerIconProps('xs')} className="text-emerald-500" />
+                        </span>
+                      </Link>
+                    </Button>
                   </div>
                 )}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      ) : !error && (
-        <Alert variant="info">
-          No expenses found. Click the "Add New Expense" button to create one.
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {placeholderCount > 0 && (
+        <Alert className="mb-6 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+          <AlertTitle className="text-amber-800 dark:text-amber-400">Attention</AlertTitle>
+          <AlertDescription className="text-amber-700 dark:text-amber-300">
+            You have {placeholderCount} placeholder expense(s) in your data. These are temporary items created during data recovery.
+          </AlertDescription>
         </Alert>
       )}
-    </Container>
+    </div>
   );
 };
+
+// Add these icons that are used in the updated code
+const PlusIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+const ChevronRightIcon = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
 
 export default Dashboard; 

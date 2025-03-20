@@ -1,42 +1,97 @@
-import { Amplify } from 'aws-amplify';
-import { generateClient } from 'aws-amplify/api';
+// Mock API service to replace AWS Amplify/AppSync
+// This file replaces Amplify configuration with a simple local data store
 
-// Configure Amplify with environment variables
-const config = {
-  API: {
-    GraphQL: {
-      endpoint: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'https://tov3dxzvsfe4pdrvwv46uawjty.appsync-api.us-east-2.amazonaws.com/graphql',
-      region: import.meta.env.AWS_REGION || 'us-east-2',
-      defaultAuthMode: 'apiKey',
-      apiKey: import.meta.env.VITE_GRAPHQL_API_KEY || 'da2-w63pn5x5efd47ponjrsxlyy6m4'
-    }
+// In-memory data store for our expenses
+let expensesData = [
+  {
+    id: '1',
+    userId: '1',
+    title: 'Groceries',
+    amount: 75.50,
+    date: '2023-05-15',
+    category: 'Food',
+    description: 'Weekly grocery shopping'
   },
-  Auth: {
-    Cognito: {
-      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || 'us-east-2_VT8wQfSHh',
-      userPoolClientId: import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID || '2tsqob7t5fuidn9ntd505jnkj4',
-      identityPoolId: import.meta.env.VITE_COGNITO_IDENTITY_POOL_ID || 'us-east-2:9d8e77c4-28fd-4b59-8fb6-584ed46de845'
+  {
+    id: '2',
+    userId: '1',
+    title: 'Gas',
+    amount: 45.00,
+    date: '2023-05-14',
+    category: 'Transportation',
+    description: 'Filled up the tank'
+  },
+  {
+    id: '3',
+    userId: '1',
+    title: 'Movie tickets',
+    amount: 25.00,
+    date: '2023-05-13',
+    category: 'Entertainment',
+    description: 'Friday night movie'
+  }
+];
+
+// Generate a simple UUID for new items
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+// API service methods
+export const api = {
+  // Get all expenses for a user
+  getExpenses: async (userId) => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return expensesData.filter(expense => expense.userId === userId);
+  },
+  
+  // Get a single expense by ID
+  getExpense: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return expensesData.find(expense => expense.id === id);
+  },
+  
+  // Create a new expense
+  createExpense: async (data) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const newExpense = {
+      id: generateId(),
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    expensesData.push(newExpense);
+    return newExpense;
+  },
+  
+  // Update an existing expense
+  updateExpense: async (id, data) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = expensesData.findIndex(expense => expense.id === id);
+    if (index !== -1) {
+      expensesData[index] = {
+        ...expensesData[index],
+        ...data,
+        updatedAt: new Date().toISOString()
+      };
+      return expensesData[index];
     }
+    throw new Error('Expense not found');
+  },
+  
+  // Delete an expense
+  deleteExpense: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const index = expensesData.findIndex(expense => expense.id === id);
+    if (index !== -1) {
+      const deleted = expensesData[index];
+      expensesData = expensesData.filter(expense => expense.id !== id);
+      return deleted;
+    }
+    throw new Error('Expense not found');
   }
 };
 
-// Pre-configure a client for use throughout the app
-let client;
-
-// Configure Amplify
-export const configureAmplify = () => {
-  // Configure Amplify using the config object
-  Amplify.configure(config);
-  
-  console.log('Amplify configured with AppSync endpoint:', config.API.GraphQL.endpoint);
-  
-  // Generate the client after configuration
-  client = generateClient();
-  return client;
-};
-
-// Initialize the client immediately
-configureAmplify();
-
-// Export the client and config
-export { client, config }; 
+// Export the API service
+export default api; 
